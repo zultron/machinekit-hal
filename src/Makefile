@@ -133,10 +133,9 @@ ifeq ($(RUN_IN_PLACE)+$(BUILD_DRIVERS),yes+yes)
 		    \( 0`stat -c %u ../libexec/rtapi_app_$$f 2>/dev/null` \
 			-ne 0 -o ! -u ../libexec/rtapi_app_$$f \) \
 		&& need_setuid=1; \
-	    ln -sf $(EMC2_HOME)/rtlib/prubin/pru_generic.bin ../rtlib/$$f/pru_generic.bin; \
-	    ln -sf $(EMC2_HOME)/rtlib/prubin/pru_generic.dbg ../rtlib/$$f/pru_generic.dbg; \
-	    ln -sf $(EMC2_HOME)/rtlib/prubin/pru_decamux.bin ../rtlib/$$f/pru_decamux.bin; \
-	    ln -sf $(EMC2_HOME)/rtlib/prubin/pru_decamux.dbg ../rtlib/$$f/pru_decamux.dbg; \
+	    for i in generic.bin generic.dbg decamux.bin decamux.dbg; do \
+	        ln -sf ../prubin/pru_$$i ../rtlib/$$f/pru_$$i; \
+	    done; \
 	done; \
 	test "$$need_setuid" = 1 && \
 	    $(VECHO) -n "You now need to run 'sudo make setuid' " && \
@@ -873,6 +872,7 @@ install: install-test install-kernel-dep install-kernel-indep
 
 install-dirs:
 	$(DIR)  $(DESTDIR)$(EMC2_RTLIB_DIR) \
+		$(DESTDIR)$(EMC2_RTLIB_BASE_DIR)/prubin \
 		$(DESTDIR)$(sysconfdir)/linuxcnc $(DESTDIR)$(bindir) \
 		$(DESTDIR)$(includedir)/linuxcnc \
 		$(DESTDIR)$(docdir) $(DESTDIR)$(ncfilesdir) \
@@ -907,6 +907,7 @@ endif
 ifeq ($(USERMODE_PCI),yes)
 	$(DIR)	$(DESTDIR)$(includedir)/linuxcnc/userpci
 endif
+
 
 install-kernel-indep: install-dirs
 	$(FILE) objects/*.msg $(DESTDIR)$(tcldir)/msgs
@@ -988,6 +989,16 @@ endif
 	$(FILE) ../etc/linuxcnc/machinekit.ini $(DESTDIR)$(sysconfdir)/linuxcnc
 	$(EXE) ../bin/profile_axis $(DESTDIR)$(bindir)
 	$(EXE) ../bin/mank $(DESTDIR)$(bindir)
+ifeq ($(TARGET_PLATFORM_BEAGLEBONE),yes)
+	$(FILE) ../rtlib/prubin/* $(DESTDIR)$(EMC2_RTLIB_BASE_DIR)/prubin
+#	# Symlinks to avoid config changes?
+	for i in generic.bin generic.dbg decamux.bin decamux.dbg; do \
+	    for f in $(BUILD_THREAD_FLAVORS); do \
+		ln -sf ../prubin/pru_$$i \
+		    $(DESTDIR)$(EMC2_RTLIB_BASE_DIR)/$$f/pru_$$i; \
+	    done; \
+	done
+endif # ($(TARGET_PLATFORM_BEAGLEBONE),yes)
 
 ifeq ($(BUILD_PYTHON),yes)
 install-kernel-indep: install-python
