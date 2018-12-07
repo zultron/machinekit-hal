@@ -23,30 +23,23 @@ cd "$(dirname $0)"
 echo $0 $* > configure.cmdline
 
 rules_enable_threads() {
-    # enable thread flavors in debian/rules; e.g.
+    # enable thread flavors in debian/rules.threads; e.g.
     #    THREADS_POSIX = --with-posix
-    # ...unnecessary for control-only
-    if test -n "$MK_CROSS_BUILDER"; then
-        # Reduce file req'ts in mk-cross-builder
-        echo "debian/rules:  skip ${FLAVOR} config in mk-cross-builder" >&2
-        return
-    fi
     FLAVOR=$1
     FLAVOR_VAR=THREADS_$(echo $FLAVOR | tr 'a-z-' 'A-Z_')
-    sed -i rules \
-    -e "s/^${FLAVOR_VAR}[^_].*/${FLAVOR_VAR} = --with-${FLAVOR}/"
-    echo "debian/rules:  enabled ${FLAVOR} threads" >&2
+    echo "${FLAVOR_VAR} = --with-${FLAVOR}" >> rules.threads
+    echo "debian/rules.threads:  enabled ${FLAVOR} threads" >&2
 }
 
 do_posix() {
-    cat control.posix.in >> control
+    cat control.posix >> control
     echo "debian/control:  added POSIX threads package" >&2
     rules_enable_threads posix
     HAVE_FLAVOR=true
 }
 
 do_rt-preempt() {
-    cat control.rt-preempt.in >> control
+    cat control.rt-preempt >> control
     echo "debian/control:  added RT_PREEMPT threads package" >&2
 
     rules_enable_threads rt-preempt
@@ -54,14 +47,12 @@ do_rt-preempt() {
 }
 
 do_xenomai() {
-    cat control.xenomai.in >> control
-    echo "debian/control:  added xenomai threads package" >&2
+    cat control.xenomai >> control
 
     # Be sure the -dev files only appear once
     BUILD_DEPS+=", libxenomai-dev"
-    echo "debian/control:  added Xenomai (userland) threads package" \
-    "with Build-Depends:" >&2
-    echo "    libxenomai-dev" >&2
+    echo "debian/control:  added Xenomai threads package," \
+         "Build-Depends libxenomai-dev" >&2
     rules_enable_threads xenomai
     HAVE_FLAVOR=true
 }
@@ -132,36 +123,38 @@ test "$1" != --help || usage
 
 # set defaults
 BUILD_DEPS=  # List of Build-Depends
+DEPS= # List of Depends
 HAVE_FLAVOR=false
 
 ## copy base templates into place
 
 ## situation at 20092018
 ## python-gst1.0 backported to Jessie + Stretch
-## python-gtksourceview2 not available for Buster but is for Sid, meaning gladevcp widgets keep working.
-## python-pil and python-pil.imagegtk active for Sid replacing python-imaging and python-imaging-tk
-## however selecting python-imaging and python-imaging-tk in Stretch actually
-## results in python-pil and python-pil.imagegtk being installed, so will probably completely backport soon.
+case "$DISTRO_CODENAME" in
+    jessie) DEPS+=" python-gst0.10," ;;
+    *) DEPS+=" python-gst-1.0," ;;
+esac
+## python-gtksourceview2 not available for Buster but is for Sid,
+## meaning gladevcp widgets keep working.
+case "$DISTRO_CODENAME" in
+    buster) : ;;
+    *) DEPS+=" python-gtksourceview2," ;;
+esac
+## python-pil and python-pil.imagegtk active for Sid replacing
+## python-imaging and python-imaging-tk
+##
+## however selecting python-imaging and python-imaging-tk in Stretch
+## actually results in python-pil and python-pil.imagegtk being
+## installed, so will probably completely backport soon.
+case "$DISTRO_CODENAME" in
+    jessie|stretch|buster) DEPS+=" python-imaging, python-imaging-tk," ;;
+    *) DEPS+=" python-pil, python-pil.imagetk," ;;
+esac
 
-## Keep individual control files, so they can easily be amended as things change
-
-if [ "$DISTRO_CODENAME" == "stretch" ]; then
-    cp control.stretch.in control
-elif [ "$DISTRO_CODENAME" == "buster" ]; then
-    cp control.buster.in control
-elif [ "$DISTRO_CODENAME" == "sid" ]; then
-    cp control.sid.in control
-else
-    cp control.in control
-fi
-
-if test -z "$MK_CROSS_BUILDER"; then # Reduce file req'ts in mk-cross-builder
-    echo "debian/control:  copied base template" >&2
-    cp rules.in rules; chmod +x rules
-    echo "debian/rules:  copied base template" >&2
-    cp machinekit.install.in machinekit.install
-    echo "debian/machinekit.install.in:  copied base template" >&2
-fi
+cp control.in control
+echo "debian/control:  copied base template" >&2
+> rules.threads
+echo "debian/rules.threads:  initialized" >&2
 
 # read command line options
 while getopts prxcsd?h ARG; do
@@ -176,10 +169,11 @@ while getopts prxcsd?h ARG; do
     esac
 done
 
-# Set control Build-Depends:
+# Set control Depends: and Build-Depends:
 sed -i control \
-    -e "s/@BUILD_DEPS@/${BUILD_DEPS}/"
-echo "debian/control:  add final Build-Depends: list" >&2
+    -e "s/@BUILD_DEPS@/${BUILD_DEPS}/" \
+    -e "s/@DEPS@/${DEPS}/"
+echo "debian/control:  add final Depends: and Build-Depends: lists" >&2
 
 # Warn if no flavor configured
 $HAVE_FLAVOR || usage "WARNING:  No thread flavors configured"
