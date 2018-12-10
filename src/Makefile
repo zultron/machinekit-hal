@@ -904,9 +904,6 @@ ifeq ($(BUILD_EMCWEB),yes)
 		$(DESTDIR)$(datadir)/linuxcnc/doc-root/js \
 		$(DESTDIR)$(datadir)/linuxcnc/doc-root/res
 endif
-ifeq ($(USERMODE_PCI),yes)
-	$(DIR)	$(DESTDIR)$(includedir)/linuxcnc/userpci
-endif
 
 
 install-kernel-indep: install-dirs
