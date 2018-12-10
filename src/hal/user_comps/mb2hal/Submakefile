@@ -7,8 +7,8 @@ MB2HAL_SRCS = \
 	hal/user_comps/mb2hal/mb2hal_modbus.c \
 	hal/user_comps/mb2hal/mb2hal_hal.c
 #GLIB_CFLAGS and GLIB_LIBS used by modbus.c
-MB2HAL_CCFLAGS = -DDEBUG -Wall -I. $(GLIB_CFLAGS) $(LIBMODBUS_CFLAGS)
-MB2HAL_LDFLAGS = -lpthread $(GLIB_LIBS) $(LIBMODBUS_LIBS)
+MB2HAL_CCFLAGS = -DDEBUG -Wall $(LIBMODBUS_CFLAGS)
+MB2HAL_LDFLAGS = -lpthread $(LIBMODBUS_LIBS)
 
 # Extra preprocessor symbols.
 # EXTRAFLAGS can be used to specify any C compiler flag.
