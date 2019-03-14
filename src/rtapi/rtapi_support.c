@@ -239,7 +239,7 @@ void rtapi_print(const char *fmt, ...) {
     va_list args;
 
     va_start(args, fmt);
-    rtapi_msg_handler(RTAPI_MSG_ERR, fmt, args);
+    rtapi_msg_handler(RTAPI_MSG_ALL, fmt, args);
     va_end(args);
 }
 
