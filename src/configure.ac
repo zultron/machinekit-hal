@@ -974,6 +974,12 @@ AC_ARG_ENABLE(dev,
 # NML
 ##############################################################################
 
+PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.0.4],
+    [
+        AC_DEFINE(HAVE_ZMQ, [], [zeroMQ zmq library available])
+	USE_ZMQ=yes
+    ],)
+
 PKG_CHECK_MODULES([CZMQ], [libczmq > 4.0],
     [
         AC_DEFINE(HAVE_CZMQ, [], [zeroMQ czmq library available])
@@ -1823,6 +1829,9 @@ AC_SUBST(BUILD_NMLDEP)
 if test "$BUILD_NMLDEP" = yes; then
    AC_DEFINE(BUILD_NMLDEP, [], [build NML dependent parts])
 fi
+
+AC_SUBST([ZMQ_CFLAGS])
+AC_SUBST([ZMQ_LIBS])
 
 AC_SUBST([CZMQ_CFLAGS])
 AC_SUBST([CZMQ_LIBS])

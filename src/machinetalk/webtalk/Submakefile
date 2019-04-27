@@ -22,6 +22,7 @@ WEBTALK_SRCS :=  $(addprefix $(WEBTALK_DIR)/, \
 
 WEBTALK_CXXFLAGS := 		\
 	$(PROTOBUF_CFLAGS) 	\
+	$(ZMQ_CFLAGS) 		\
 	$(CZMQ_CFLAGS) 		\
 	$(JANSSON_CFLAGS)	\
 	$(LWS_CFLAGS)		\
@@ -33,6 +34,7 @@ WEBTALK_CXXFLAGS := 		\
 
 WEBTALK_LDFLAGS := 		\
 	$(PROTOBUF_LIBS)	\
+	$(ZMQ_LIBS) 		\
 	$(CZMQ_LIBS) 		\
 	$(JANSSON_LIBS) 	\
 	$(LWS_LIBS) 		\

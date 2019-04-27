@@ -240,7 +240,7 @@ RTAPI_APP_RPATH=-Wl,-rpath,$(LIB_DIR)
 endif
 
 $(call TOOBJSDEPS, rtapi/$(threads)/rtapi_app.cc): EXTRAFLAGS = \
-	$(PROTOBUF_CFLAGS) $(CZMQ_CFLAGS) $(LTTNG_UST_CFLAGS)
+	$(PROTOBUF_CFLAGS) $(ZMQ_CFLAGS) $(CZMQ_CFLAGS) $(LTTNG_UST_CFLAGS)
 
 ../libexec/rtapi_app_$(threads): \
 	$(call TOOBJS, $(RTAPI_APP_SRCS)) \
@@ -258,7 +258,7 @@ $(call TOOBJSDEPS, rtapi/$(threads)/rtapi_app.cc): EXTRAFLAGS = \
 	    $^ \
 	    $(LDFLAGS) \
 	    $($(THREADS)_THREADS_LDFLAGS) \
-	    $(PROTOBUF_LIBS) $(CZMQ_LIBS) $(LTTNG_UST_LIBS) \
+	    $(PROTOBUF_LIBS) $(ZMQ_LIBS) $(CZMQ_LIBS) $(LTTNG_UST_LIBS) \
 	    -lstdc++ -ldl -luuid
 
 #	$(LIBBACKTRACE) # already linked into libmtalk
@@ -360,10 +360,10 @@ $(call TOOBJS, rtapi/rtapi_msgd.cc): \
 	CXXFLAGS += -DGIT_BUILD_SHA=\"'$(GIT_BUILD_SHA)'\"
 
 RTAPI_MSGD_CFLAGS := \
-	$(PROTOBUF_CFLAGS) $(CZMQ_CFLAGS) $(AVAHI_CFLAGS)
+	$(PROTOBUF_CFLAGS) $(ZMQ_CFLAGS) $(CZMQ_CFLAGS) $(AVAHI_CFLAGS)
 
 RTAPI_MSGD_LDFLAGS := \
-	$(PROTOBUF_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) \
+	$(PROTOBUF_LIBS) $(ZMQ_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) \
 	-lstdc++ -ldl -luuid
 
 #	$(LIBBACKTRACE) # already linked into libmtalk

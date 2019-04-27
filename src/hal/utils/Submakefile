@@ -20,7 +20,7 @@ $(call TOOBJSDEPS, hal/utils/halsh.c) : EXTRAFLAGS += $(TCL_CFLAGS)
 TARGETS += ../tcl/hal.so
 
 $(call TOOBJSDEPS, $(HALCMDCCSRCS)) : EXTRAFLAGS =  \
-	$(PROTOBUF_CFLAGS) $(CZMQ_CFLAGS) -fPIC
+	$(PROTOBUF_CFLAGS) $(ZMQ_CFLAGS) $(CZMQ_CFLAGS) -fPIC
 
 ../bin/halcmd: $(call TOOBJS, $(HALCMDSRCS))  $(call TOOBJS, $(HALCMDCCSRCS)) \
 	../lib/liblinuxcncini.so.0 \
@@ -30,7 +30,7 @@ $(call TOOBJSDEPS, $(HALCMDCCSRCS)) : EXTRAFLAGS =  \
 	../lib/librtapi_math.so.0
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(READLINE_LIBS) \
-	$(PROTOBUF_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) -lm -lstdc++
+	$(PROTOBUF_LIBS) $(ZMQ_LIBS) $(CZMQ_LIBS) $(AVAHI_LIBS) -lm -lstdc++
 TARGETS += ../bin/halcmd
 
 ifdef TARGET_PLATFORM_SOCFPGA
