@@ -26,7 +26,7 @@ Architecture: any
 Depends: make, g++, tcl8.6, tk8.6,
    ${shlibs:Depends}, ${misc:Depends},
    machinekit (= ${binary:Version}),
-   yapps2-runtime
+   yapps2-runtime | python-yapps
 Section: libs
 Description: PC based motion controller for real-time Linux
     Machinekit is the next-generation Enhanced Machine Controller which
@@ -44,10 +44,11 @@ Depends: ${shlibs:Depends}, machinekit-rt-threads, tcl8.6, tk8.6,
     bwidget (>= 1.7), libtk-img (>=1.13),
     ${python:Depends}, ${misc:Depends},
     python-tk,
-    python-gnome2, python-glade2,
+    python-glade2,
     python-numpy,
-    python-vte, python-xlib, python-gtkglext1, python-configobj,
+    python-xlib, python-gtkglext1, python-configobj,
     python-zmq, python-protobuf (>= 2.4.1),
+    python-imaging | python-pil, python-imaging-tk | python-pil.imagetk,
     python-avahi, python-simplejson, python-pyftpdlib,
     python-pydot, xdot, @DEPS@
     tclreadline, bc, procps, psmisc, cgroup-tools, uuid-runtime

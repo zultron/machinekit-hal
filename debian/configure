@@ -140,16 +140,6 @@ case "$DISTRO_CODENAME" in
     buster) : ;;
     *) DEPS+=" python-gtksourceview2," ;;
 esac
-## python-pil and python-pil.imagegtk active for Sid replacing
-## python-imaging and python-imaging-tk
-##
-## however selecting python-imaging and python-imaging-tk in Stretch
-## actually results in python-pil and python-pil.imagegtk being
-## installed, so will probably completely backport soon.
-case "$DISTRO_CODENAME" in
-    jessie|stretch|buster) DEPS+=" python-imaging, python-imaging-tk," ;;
-    *) DEPS+=" python-pil, python-pil.imagetk," ;;
-esac
 
 cp control.in control
 echo "debian/control:  copied base template" >&2
