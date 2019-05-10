@@ -46,4 +46,3 @@ if [ ! -r $PRU ] ; then
 	exit 1;
 fi
 
-
