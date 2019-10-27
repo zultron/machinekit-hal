@@ -1,0 +1,109 @@
+#!/bin/sh -e
+# In order to preserve the git history of these files, symbolic links are created
+# under the build directory. This files will be part of the dev package
+
+FILES=" hal/lib/config_module.h \
+	hal/lib/hal.h \
+	hal/lib/hal_accessor.h \
+	hal/lib/hal_accessor_macros.h \
+	hal/lib/hal_group.h \
+	hal/lib/hal_internal.h \
+	hal/lib/hal_list.h \
+	hal/lib/hal_logging.h \
+	hal/lib/hal_object.h \
+	hal/lib/hal_object_selectors.h \
+	hal/lib/hal_parport.h \
+	hal/lib/hal_priv.h \
+	hal/lib/hal_rcomp.h \
+	hal/lib/hal_ring.h \
+	hal/lib/hal_types.h \
+	hal/utils/halcmd_rtapiapp.h \
+	libnml/inifile/inifile.h \
+	libnml/inifile/inifile.hh \
+	rtapi/multiframe.h \
+	rtapi/multiframe_flag.h \
+	rtapi/ring.h \
+	rtapi/rtapi.h \
+	rtapi/rtapi_app.h \
+	rtapi/rtapi_atomics.h \
+	rtapi/rtapi_bitops.h \
+	rtapi/rtapi_byteorder.h \
+	rtapi/rtapi_common.h \
+	rtapi/rtapi_ctype.h \
+	rtapi/rtapi_errno.h \
+	rtapi/rtapi_exception.h \
+	rtapi/rtapi_export.h \
+	rtapi/rtapi_global.h \
+	rtapi/rtapi_heap.h \
+	rtapi/rtapi_heap_private.h \
+	rtapi/rtapi_hexdump.h \
+	rtapi/rtapi_int.h \
+	rtapi/rtapi_io.h \
+	rtapi/rtapi_math.h \
+	rtapi/rtapi_math64.h \
+	rtapi/rtapi_pci.h \
+	rtapi/rtapi_shmkeys.h \
+	rtapi/rtapi_string.h \
+	rtapi/shmdrv/shmdrv.h \
+	rtapi/rt-preempt.h \
+	rtapi/rtapi_compat.h \
+	rtapi/triple-buffer.h \
+	rtapi/xenomai.h \
+	machinetalk/include/pb-linuxcnc.h \
+	machinetalk/include/syslog_async.h \
+	machinetalk/include/czmq-watch.h \
+	machinetalk/include/inihelp.hh \
+	machinetalk/include/json2pb.hh \
+	machinetalk/include/bin2ascii.hh \
+	machinetalk/include/ll-zeroconf.hh \
+	machinetalk/include/mk-zeroconf-types.h \
+	machinetalk/include/mk-backtrace.h \
+	machinetalk/include/mk-service.hh \
+	machinetalk/include/mk-zeroconf.hh \
+	machinetalk/include/pbutil.hh \
+	machinetalk/include/setup_signals.h \
+	machinetalk/include/container.h \
+	machinetalk/include/halpb.hh"
+
+for a in $FILES
+do 
+	ln -sf $1/$a $2
+done
+
+mkdir -p $2/protobuf
+ln -sf	$1/machinetalk/nanopb/pb.h \
+	$1/machinetalk/nanopb/pb_decode.h \
+	$1/machinetalk/nanopb/pb_encode.h \
+	$2/protobuf
+
+FILES_MESA=" \
+	hal/drivers/mesa-hostmot2/bitfile.h \
+	hal/drivers/mesa-hostmot2/hm2_pci.h \
+	hal/drivers/mesa-hostmot2/hostmot2.h \
+	hal/drivers/mesa-hostmot2/hm2_7i43.h \
+	hal/drivers/mesa-hostmot2/hm2_soc_ol.h \
+	hal/drivers/mesa-hostmot2/lbp16.h \
+	hal/drivers/mesa-hostmot2/hm2_7i90.h \
+	hal/drivers/mesa-hostmot2/hm2_test.h \
+	hal/drivers/mesa-hostmot2/sserial.h \
+	hal/drivers/mesa-hostmot2/hm2_eth.h \
+	hal/drivers/mesa-hostmot2/hostmot2-lowlevel.h"
+mkdir -p $2/mesa
+for a in $FILES_MESA
+do 
+	ln -sf $1/$a $2/mesa
+done
+
+FILES_USERPCI="
+	rtapi/userpci/device.h \
+	rtapi/userpci/firmware.h \
+	rtapi/userpci/gfp.h \
+	rtapi/userpci/list.h \
+	rtapi/userpci/module.h \
+	rtapi/userpci/slab.h \
+	rtapi/userpci/string.h"
+mkdir -p $2/userpci
+for a in $FILES_USERPCI
+do 
+	ln -sf $1/$a $2/userpci
+done
