@@ -533,7 +533,6 @@ HEADERS := \
     rtapi/rtapi_global.h \
     rtapi/rtapi_shmkeys.h \
     rtapi/rtapi_io.h \
-    rtapi/rtapi_ctype.h \
     rtapi/rtapi_errno.h \
     rtapi/rtapi_string.h \
     rtapi/rtapi_pci.h \
@@ -797,7 +796,7 @@ install-python: install-dirs
 	$(DIR) $(DESTDIR)$(SITEPY)/machinekit
 	$(DIR) $(DESTDIR)$(SITEPY)/machinekit/nosetests
 	$(DIR) $(DESTDIR)$(SITEPY)/machinetalk
-	$(DIR) $(DESTDIR)$(SITEPY)/machinetalk/protobuf
+	$(DIR) $(DESTDIR)$(SITEPY)/protobuf
 	$(DIR) $(DESTDIR)$(SITEPY)/fdm
 	$(DIR) $(DESTDIR)$(SITEPY)/drivers
 	$(EXE) ../bin/hal_input $(DESTDIR)$(bindir)
@@ -815,7 +814,7 @@ install-python: install-dirs
 	$(FILE) ../lib/python/machinekit/nosetests/*.py $(DESTDIR)$(SITEPY)/machinekit/nosetests
 	$(FILE) ../lib/python/machinekit/*.so $(DESTDIR)$(SITEPY)/machinekit/
 	$(FILE) ../lib/python/machinetalk/*.py $(DESTDIR)$(SITEPY)/machinetalk/
-	$(FILE) ../lib/python/machinetalk/protobuf/*.py $(DESTDIR)$(SITEPY)/machinetalk/protobuf/
+	$(FILE) ../lib/python/protobuf/*.py $(DESTDIR)$(SITEPY)/protobuf/
 	$(FILE) ../lib/python/drivers/*.py $(DESTDIR)$(SITEPY)/drivers
 	$(FILE) ../lib/python/gladevcp/*.* $(DESTDIR)$(SITEPY)/gladevcp
 	$(EXE) ../bin/mkwrapper $(DESTDIR)$(bindir)
