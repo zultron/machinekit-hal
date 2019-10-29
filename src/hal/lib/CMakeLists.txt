@@ -49,9 +49,9 @@ set_target_properties(_hal PROPERTIES
 	COMPILE_DEFINITIONS "ULAPI"
 	LIBRARY_OUTPUT_DIRECTORY ${halpy_dir}
 	PREFIX "")
-target_link_libraries(_hal  linuxcnchal ${PYTHON_LIBRARIES})
+target_link_libraries(_hal linuxcnchal ${PYTHON_LIBRARIES})
 add_dependencies(_hal halpy)
-cleanup_rpath_hack(_hal)
+rpath_hack(_hal)
 _install_py(hal _hal)
 
 foreach(_flav ${BUILD_THREAD_FLAVORS})
