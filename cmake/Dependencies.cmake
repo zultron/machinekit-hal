@@ -6,10 +6,6 @@ endif()
 set(HAVE_PYTHON ${Python2_VERSION})
 
 
-if(NOT IS_DIRECTORY ${Python2_SITELIB}/google/protobuf)
-	message(FATAL_ERROR "python-protobuf not found: install python-protobuf")
-endif()
-
 find_package(PkgConfig)
 if(NOT PkgConfig_FOUND)
 	message(FATAL_ERROR "pkg-config not found: install pkg-config")
