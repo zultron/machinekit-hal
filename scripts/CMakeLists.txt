@@ -8,7 +8,6 @@ set(EMC2_SYSTEM_CONFIG_DIR ${PROJECT_SYSCONF_DIR}/machinekit)
 set(EMC2_LIBEXEC_DIR ${PROJECT_LIBEXEC_DIR})
 
 set(LSMOD "/usr/sbin/lsmod")
-set(PIDOF "/usr/bin/pidof")
 set(PS "/usr/bin/ps")
 set(AWK "/usr/bin/awk")
 
