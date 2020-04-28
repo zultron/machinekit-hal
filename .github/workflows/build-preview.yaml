@@ -1,0 +1,100 @@
+name: Test and build preview packages
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+    - 'master'
+
+jobs:
+  testMachinekitHAL:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image_tag: [amd64_9, amd64_10]
+    env:
+      GITHUB_OWNER: ${{ github.actor }}
+      GITHUB_REPO: ${{ github.repository }}
+      IMAGE_TAG: ${{ matrix.image_tag }}
+
+    steps:
+    - name: Clone git repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.sha }}
+        path: build
+
+    - name: Build Docker image
+      working-directory: ./build
+      run: |
+        scripts/build_debian_docker_image \
+            -i ${GITHUB_OWNER} -r  ${GITHUB_REPO} -t ${IMAGE_TAG}
+
+    - name: Run tests
+      run: |
+        scripts/build_docker \
+            -i ${GITHUB_OWNER}/${GITHUB_REPO} -t ${IMAGE_TAG} -c test
+        git clean -xdf; find tests -name pipe-std\* -delete
+      working-directory: ./build
+
+    - name: Build packages
+      working-directory: ./build
+      run: |
+        scripts/build_docker \
+            -i ${GITHUB_OWNER}/${GITHUB_REPO} -t ${IMAGE_TAG} -c deb
+        git clean -xdf
+
+    - name: Build LCNC Docker image
+      working-directory: ./build
+      run: |
+        mkdir packages
+        cp ../machinekit-hal{,-dev}_*.deb packages
+        scripts/build_debian_docker_image \
+            -i ${GITHUB_OWNER} -r ${GITHUB_REPO} -t ${IMAGE_TAG} -T lcncbuilder
+
+    - name: Build and test LCNC EMC
+      working-directory: ./build
+      run: |
+        scripts/build_docker \
+            -i ${GITHUB_OWNER}/${GITHUB_REPO} -t ${IMAGE_TAG} -c test-lcnc
+
+  buildMachinekitHALPackages:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image_tag:
+          # Buster
+          - amd64_10
+          - arm64_10
+          - armhf_10
+          - i386_10
+          # Stretch
+          - amd64_9
+          - arm64_9
+          - armhf_9
+          - i386_9
+    env:
+      GITHUB_OWNER: ${{ github.actor }}
+      GITHUB_REPO: ${{ github.repository }}
+      IMAGE_TAG: ${{ matrix.image_tag }}
+
+    steps:
+    - name: Clone git repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.sha }}
+        path: build
+
+    - name: Build Docker image
+      working-directory: ./build
+      run: |
+        scripts/build_debian_docker_image \
+            -i ${GITHUB_OWNER} -r  ${GITHUB_REPO} -t ${IMAGE_TAG}
+
+    - name: Build Machinekit-HAL .deb package
+      run: |
+        scripts/build_docker \
+            -i ${GITHUB_OWNER}/${GITHUB_REPO} -t ${IMAGE_TAG} -c deb
+      working-directory: ./build
