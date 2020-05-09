@@ -161,7 +161,7 @@ jobs:
               docker load ~/.docker-images/image
           fi
           scripts/build_debian_docker_image -r temp -i temp -t ${TAG}
-          mkdir ~/.docker-images
+          mkdir -p ~/.docker-images
           docker save -o ~/.docker-images/image temp/temp:${TAG}
 
   buildMachinekitHALDebianPackages:
