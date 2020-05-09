@@ -130,7 +130,7 @@ jobs:
         printf "Timestamp for this workflow run is $TIMESTAMP\n"
 
   buildDockerImage:
-    name: Docker Img ${{ matrix.osVersionCodename }}-${{ matrix.architecture }}
+    name: Docker img ${{ matrix.osVersionCodename }}-${{ matrix.architecture }}
     runs-on: ubuntu-latest
     needs: prepareState
     strategy:
@@ -155,14 +155,14 @@ jobs:
           TAG: '${{ matrix.architecture }}_${{ matrix.osVersionNumber }}'
         working-directory: ./build/machinekit-hal
         run: |
-          ls -l ~/.docker-images
+          test ! -d ~/.docker-images || ls -l ~/.docker-images
           if test -f ~/.docker-images/image; then
               docker load -i ~/.docker-images/image
           fi
           scripts/build_debian_docker_image -r temp -i temp -t ${TAG}
           mkdir -p ~/.docker-images
           docker save -o ~/.docker-images/image temp/temp:${TAG}
-          ls -l ~/.docker-images
+          test ! -d ~/.docker-images || ls -l ~/.docker-images
 
   buildMachinekitHALDebianPackages:
     name: MK HAL pkgs ${{ matrix.osVersionCodename }}-${{ matrix.architecture }}
