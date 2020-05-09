@@ -158,7 +158,7 @@ jobs:
         working-directory: ./build/machinekit-hal
         run: |
           if test -f ~/.docker-images/image; then
-              docker load ~/.docker-images/image
+              docker load -i ~/.docker-images/image
           fi
           scripts/build_debian_docker_image -r temp -i temp -t ${TAG}
           mkdir -p ~/.docker-images
@@ -192,7 +192,7 @@ jobs:
 
       - name:  Load Docker image
         run: |
-          docker load -i ~/.docker-images/image ${DOCKER_IMAGE}:${TAG}
+          docker load -i ~/.docker-images/image
 
       - name: Build MK-HAL package
         working-directory: ./build/machinekit-hal  
