@@ -28,15 +28,13 @@ name: Test application and publish packages (Debian linux)
 on:
   push:
     branches:
-    - 'foo'
-  #   branches:
-  #   - '*'
-  #   tags-ignore:
-  #   - 'v*'
+    - '*'
+    tags-ignore:
+    - 'v*'
 
-  # pull_request:
-  #   branches:
-  #   - '*'
+  pull_request:
+    branches:
+    - '*'
 
 jobs:
   prepareState:
