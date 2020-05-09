@@ -7,51 +7,13 @@
             "EXTRA_FLAGS": "",
             "LDEMULATION": "elf_x86_64"
         }
-        // ,
-        // {
-        //     "DEBIAN_ARCH": "armhf",
-        //     "SYS_ROOT": "/sysroot",
-        //     "HOST_MULTIARCH": "arm-linux-gnueabihf",
-        //     "EXTRA_FLAGS": "",
-        //     "LDEMULATION": "armelf_linux_eabi"
-        // },
-        // {
-        //     "DEBIAN_ARCH": "arm64",
-        //     "SYS_ROOT": "/sysroot",
-        //     "HOST_MULTIARCH": "aarch64-linux-gnu",
-        //     "EXTRA_FLAGS": "",
-        //     "LDEMULATION": "aarch64linux"
-        // },
-        // {
-        //     "DEBIAN_ARCH": "i386",
-        //     "SYS_ROOT": "/sysroot",
-        //     "HOST_MULTIARCH": "i386-linux-gnu",
-        //     "EXTRA_FLAGS": "-m32",
-        //     "LDEMULATION": "elf_i386"
-        // }
     ],
     "osVersions": [
-        // {
-        //     "DISTRO_CODENAME": "jessie",
-        //     "BASE_IMAGE": "debian:jessie",
-        //     "DISTRO_VER": 8
-        // },
         {
             "DISTRO_CODENAME": "stretch",
             "BASE_IMAGE": "debian:stretch",
             "DISTRO_VER": 9
         }
-        // ,
-        // {
-        //     "DISTRO_CODENAME": "buster",
-        //     "BASE_IMAGE": "debian:buster",
-        //     "DISTRO_VER": 10
-        // },
-        // {
-        //     "DISTRO_CODENAME": "bullseye",
-        //     "BASE_IMAGE": "debian:bullseye",
-        //     "DISTRO_VER": 11
-        // }
     ],
     "allowedCombinations": [
         {
