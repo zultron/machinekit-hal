@@ -160,6 +160,7 @@ jobs:
         working-directory: ./build/machinekit-hal
         run: |
           test ! -d ~/docker-images || ls -l ~/docker-images
+          ls -l
           if test -f ~/docker-images/image; then
               docker load -i ~/docker-images/image
           fi
