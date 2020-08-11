@@ -67,6 +67,10 @@
     {
       "osVersionNumber": 10,
       "architecture": "arm64"
+    },
+    {
+      "osVersionNumber": 20.04,
+      "architecture": "arm64"
     }
   ],
   "imageNameRoot": "machinekit-hal-@DISTRIBUTION@-builder-v.@TAG@"
