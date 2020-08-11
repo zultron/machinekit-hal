@@ -109,8 +109,10 @@ RUN apt-get update;         \
         build-essential     \
         fakeroot            \
         devscripts          \
-        equivs;             \
+        equivs              \
+        python3;            \
     apt-get clean;
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 ######################################################################
 
