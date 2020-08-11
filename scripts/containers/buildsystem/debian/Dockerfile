@@ -86,8 +86,7 @@ RUN addgroup --gid 1000 ${USER} &&                            \
 
 RUN apt-get update &&        \
     apt-get install -y       \
-        sudo                 \
-        machinekit-fixuid && \
+        sudo &&              \
     apt-get clean
 
 COPY scripts/buildsystem/debian/base-entrypoint.sh /opt/bin/base-entrypoint.sh

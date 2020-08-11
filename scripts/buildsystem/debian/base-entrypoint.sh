@@ -46,26 +46,6 @@ then
     exit 1
 fi
 
-if (( PASSED_USER_UID == IMAGE_USER_UID &&
-      PASSED_USER_GID == IMAGE_USER_GID ))
-then
-    printf "%b"                                                                \
-           "Machinekit-HAL entrypoint: Nothing needs to be done.\n"            \
-           "Passed user ID:${PASSED_USER_UID} and group ID:${PASSED_USER_GID}" \
-           " is the same as UID and GID of IMAGE user ${USER}.\n"
-else
-    printf "%b"                                                                 \
-           "Machinekit-HAL entrypoint: Changing burnt-in user ${USER} UID and/" \
-           "or GID to ones passed by --user run option.\n"                      \
-           "All files under / belonging to old user ID:${IMAGE_USER_UID} or"    \
-           " group ID:${IMAGE_USER_GID} will be updated to new values of user"  \
-           " ID:${PASSED_USER_UID} and group ID:${PASSED_USER_GID}.\n"
-
-    (
-        machinekit-fixuid
-    )
-fi
-
 # Set up new HOME environment variable if nothing was passed to container
 if [[ -z "${HOME}" || "${HOME}" == "/" ]]
 then
