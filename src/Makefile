@@ -222,6 +222,20 @@ endef
 #$$(info $(call c_comp_build_rules,hal/components/encoderv2.o))
 
 ###############################################################################
+# machinekit.ini
+
+# Create local machinekit.ini with unique UUID for RIP builds
+ifeq ($(RUN_IN_PLACE),yes)
+MKUUID = $(shell uuidgen)
+../etc/machinekit/machinekit.ini: ../scripts/machinekit.ini.tmpl Makefile
+	$(ECHO) Writing machinekit.ini file with UUID $(MKUUID)
+	$(Q)mkdir -p $(dirname $@)
+	$(Q)cp $< $@
+	$(Q)sed -i $@ -e "s/@MKUUID@/$(MKUUID)/"
+userspace: ../etc/machinekit/machinekit.ini
+endif
+
+###############################################################################
 # C unit test setup
 #
 # This macro generates rules for C unit tests; e.g.
@@ -682,7 +696,8 @@ install-kernel-indep: install-dirs
 	$(FILE) rtapi/rsyslogd-hal.conf $(DESTDIR)$(sysconfdir)/rsyslog.d/hal.conf
 	$(FILE) rtapi/shmdrv/limits.d-machinekit.conf \
 		$(DESTDIR)$(sysconfdir)/security/limits.d/machinekit.conf
-	$(FILE) ../etc/machinekit/machinekit.ini $(DESTDIR)$(sysconfdir)/machinekit
+	$(FILE) ../scripts/machinekit.ini.tmpl \
+	        $(DESTDIR)$(sysconfdir)/machinekit/machinekit.ini
 	$(EXE) ../bin/mank $(DESTDIR)$(bindir)
 
 ifeq ($(BUILD_PYTHON),yes)

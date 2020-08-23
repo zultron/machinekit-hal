@@ -106,7 +106,6 @@ ifneq ($(wildcard src/configure src/Makefile.inc),)
 	    scripts/gen-rtapi.ini.sh \
 	    scripts/gen-rtapi.ini.sh.in \
 	    scripts/halrun \
-	    scripts/machinekit.ini.tmpl \
 	    scripts/realtime \
 	    scripts/rip-environment \
 	    src/Makefile.inc \
