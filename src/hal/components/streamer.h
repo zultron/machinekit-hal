@@ -14,7 +14,7 @@
 #define MAX_STREAMERS		8
 #define MAX_SAMPLERS		8
 #define MAX_PINS 		20
-#define MAX_SHMEM 		128000
+#define MAX_SHMEM 		1280000
 
 #define FIFO_MAGIC_NUM		0x4649464F
 
@@ -27,6 +27,8 @@ typedef union {
     char  b;
     hal_s32_t s;
     hal_u32_t u;
+    hal_s64_t S;
+    hal_u64_t U;
 } shmem_data_t;
 
 typedef struct {
@@ -47,5 +49,7 @@ typedef union {
     hal_float_t *hfloat;
     hal_u32_t *hu32;
     hal_s32_t *hs32;
+    hal_u64_t *hu64;
+    hal_s64_t *hs64;
 } pin_data_t;
 

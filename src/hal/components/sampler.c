@@ -238,6 +238,12 @@ static void sample(void *arg, long period)
 	case HAL_S32:
 	    dptr->s = *(pptr->hs32);
 	    break;
+	case HAL_U64:
+	    dptr->U = *(pptr->hu64);
+	    break;
+	case HAL_S64:
+	    dptr->S = *(pptr->hs64);
+	    break;
 	default:
 	    break;
 	}
@@ -279,18 +285,24 @@ static int parse_types(fifo_t *f, char *cfg)
 	    c++;
 	    break;
 	case 'u':
-	case 'U':
 	    f->type[n++] = HAL_U32;
 	    c ++;
 	    break;
+	case 'U':
+	    f->type[n++] = HAL_U64;
+	    c ++;
+	    break;
 	case 's':
-	case 'S':
 	    f->type[n++] = HAL_S32;
+	    c++;
+	    break;
+	case 'S':
+	    f->type[n++] = HAL_S64;
 	    c++;
 	    break;
 	default:
 	    rtapi_print_msg(RTAPI_MSG_ERR,
-		"SAMPLER: ERROR: unknown type '%c', must be F, B, U, or S\n", *c);
+		"SAMPLER: ERROR: unknown type '%c', must be f, b, u, s, U, or S\n", *c);
 	    return 0;
 	}
     }
@@ -389,6 +401,12 @@ static int init_sampler(int num, fifo_t *tmp_fifo)
 	    break;
 	case HAL_S32:
 	    *(pptr->hs32) = 0;
+	    break;
+	case HAL_U64:
+	    *(pptr->hu64) = 0;
+	    break;
+	case HAL_S64:
+	    *(pptr->hs64) = 0;
 	    break;
 	default:
 	    break;

@@ -234,6 +234,12 @@ static void update(void *arg, long period)
 	case HAL_S32:
 	    *(pptr->hs32) = dptr->s;
 	    break;
+	case HAL_U64:
+	    *(pptr->hu64) = dptr->u;
+	    break;
+	case HAL_S64:
+	    *(pptr->hs64) = dptr->s;
+	    break;
 	default:
 	    break;
 	}
@@ -272,13 +278,19 @@ static int parse_types(fifo_t *f, char *cfg)
 	    c++;
 	    break;
 	case 'u':
-	case 'U':
 	    f->type[n++] = HAL_U32;
 	    c++;
 	    break;
+	case 'U':
+	    f->type[n++] = HAL_U64;
+	    c++;
+	    break;
 	case 's':
-	case 'S':
 	    f->type[n++] = HAL_S32;
+	    c++;
+	    break;
+	case 'S':
+	    f->type[n++] = HAL_S64;
 	    c++;
 	    break;
 	default:
@@ -374,6 +386,12 @@ static int init_streamer(int num, fifo_t *tmp_fifo)
 	    break;
 	case HAL_S32:
 	    *(pptr->hs32) = 0;
+	    break;
+	case HAL_U64:
+	    *(pptr->hu64) = 0;
+	    break;
+	case HAL_S64:
+	    *(pptr->hs64) = 0;
 	    break;
 	default:
 	    break;

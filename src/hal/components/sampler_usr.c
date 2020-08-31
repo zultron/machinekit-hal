@@ -69,6 +69,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <inttypes.h>           // PRId32 etc. printf formats
 
 #include "rtapi.h"		/* RTAPI realtime OS API */
 #include "hal.h"                /* HAL public API decls */
@@ -276,10 +277,16 @@ int main(int argc, char **argv)
 		}
 		break;
 	    case HAL_U32:
-		printf ( "%lu ", (unsigned long)buf[n].u);
+		printf ( "%" PRIu32 " ", buf[n].u);
 		break;
 	    case HAL_S32:
-		printf ( "%ld ", (long)buf[n].s);
+		printf ( "%" PRId32 " ", buf[n].s);
+		break;
+	    case HAL_U64:
+		printf ( "%" PRIu64 " ", buf[n].U);
+		break;
+	    case HAL_S64:
+		printf ( "%" PRId64 " ", buf[n].S);
 		break;
 	    default:
 		/* better not happen */
