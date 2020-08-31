@@ -47,6 +47,14 @@ int halg_signal_new(const int use_hal_mutex,
 	    set_u32_value(&new->value, 0);
 	    break;
 
+	case HAL_S64:
+	    set_s64_value(&new->value, 0);
+	    break;
+
+	case HAL_U64:
+	    set_u64_value(&new->value, 0);
+	    break;
+
 	case HAL_FLOAT:
 	    set_float_value(&new->value, 0.0);
 	    break;
@@ -302,6 +310,14 @@ int halg_link(const int use_hal_mutex,
 
 	    case HAL_U32:
 		_set_u32_sig(sig, get_u32_value(hdu));
+		break;
+
+	    case HAL_S64:
+		_set_s64_sig(sig, get_s64_value(hdu));
+		break;
+
+	    case HAL_U64:
+		_set_u64_sig(sig, get_u64_value(hdu));
 		break;
 
 	    case HAL_FLOAT:

@@ -311,6 +311,12 @@ void unlink_pin(hal_pin_t * pin)
 	case HAL_U32:
 	    set_u32_value(dummy_addr, get_u32_value(sig_data_addr));
 	    break;
+	case HAL_S64:
+	    set_s64_value(dummy_addr, get_s64_value(sig_data_addr));
+	    break;
+	case HAL_U64:
+	    set_u64_value(dummy_addr, get_u64_value(sig_data_addr));
+	    break;
 	case HAL_FLOAT:
 	    set_float_value(dummy_addr, get_float_value(sig_data_addr));
 	    break;
