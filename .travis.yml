@@ -60,90 +60,90 @@ services:
 
 matrix:
   include:
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=amd64 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=arm64 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=amd64 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=arm64 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=amd64 VERSION=9 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=arm64 VERSION=9 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=armhf VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=i386 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=armhf VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=arm64 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=i386 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=armhf VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=arm64 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=i386 VERSION=9 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: amd64
+    #   env: ARCHITECTURE=arm64 VERSION=9 DISTRIBUTION=debian
     - os: linux
       arch: arm64
-      env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=amd64 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=arm64 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=amd64 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=arm64 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=amd64 VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=arm64 VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
       env: ARCHITECTURE=armhf VERSION=20.04 DISTRIBUTION=ubuntu
     - os: linux
-      arch: amd64
-      env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=i386 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=armhf VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=arm64 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=i386 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=armhf VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=arm64 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=i386 VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: amd64
-      env: ARCHITECTURE=arm64 VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=armhf VERSION=20.04 DISTRIBUTION=ubuntu
-    - os: linux
       arch: arm64
       env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=armhf VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=amd64 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=i386 VERSION=10 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=armhf VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=amd64 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=i386 VERSION=18.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=armhf VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=amd64 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=i386 VERSION=10 DISTRIBUTION=debian
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=armhf VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=amd64 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=i386 VERSION=18.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
     # Tests
     # - Reduce total build time by starting longest jobs first
     #- ARCHITECTURE=amd64 VERSION=10   CMD=test
@@ -201,7 +201,8 @@ script:
       docker run --tty --rm -u "$(id -u):$(id -g)" \
         -v "${PARENT_DIR}:/home/machinekit/build" \
         -w "/home/machinekit/build/machinekit-hal" \
-        ${DOCKER_IMAGE} debian/ripruntests.py; 
+        ${DOCKER_IMAGE} debian/ripruntests.py; RC=$?;
+        cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;
     fi
 
 after_success:

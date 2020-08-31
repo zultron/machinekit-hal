@@ -118,7 +118,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -214,7 +215,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -311,7 +313,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -407,7 +410,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -503,7 +507,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -599,7 +604,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -695,7 +701,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -791,7 +798,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -887,7 +895,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -983,7 +992,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -1079,7 +1089,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository
@@ -1175,7 +1186,8 @@ steps:
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py;"
+      debian/ripruntests.py; RC=$?; \
+      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
 
 volumes:
 - name: repository

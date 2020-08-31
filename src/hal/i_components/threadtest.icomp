@@ -1,6 +1,25 @@
 component threadtest "Machinekit HAL component for testing thread behavior";
-pin out unsigned count;
+// increment function
+pin out u32 count;
+pin out u64 incr_start_time;
+pin out u64 incr_end_time;
+pin out bit incr_mutex_in;
+pin out bit incr_mutex_out;
+// release function
+pin out u32 rel_count;
+pin out u64 rel_start_time;
+pin out u64 rel_end_time;
+pin out bit rel_mutex_in;
+pin out bit rel_mutex_out;
+// reset function
+pin out u32 reset_count;
+pin out u64 reset_start_time;
+pin out u64 reset_end_time;
+pin out bit reset_mutex;
+
+variable rtapi_atomic_type mutex = 0;
 function increment nofp;
+function release nofp;
 function reset nofp;
 license "GPL";
 
@@ -8,14 +27,30 @@ license "GPL";
 
 FUNCTION(increment)
 {
-    count++;
+  incr_start_time = rtapi_get_time();
+  incr_mutex_in = (rtapi_test_bit(0, &mutex));
+  rtapi_mutex_try(&mutex);
+  incr_mutex_out = (rtapi_test_bit(0, &mutex));
+  count++;
+  incr_end_time = rtapi_get_time();
+  return 0;
+}
 
-return 0;
+FUNCTION(release)
+{
+  rel_start_time = rtapi_get_time();
+  rel_mutex_in = rtapi_test_bit(0, &mutex);
+  rtapi_mutex_give(&mutex);
+  rel_mutex_out = rtapi_test_bit(0, &mutex);
+  rel_end_time = rtapi_get_time();
+  return 0;
 }
 
 FUNCTION(reset)
 {
-    count=0;
-
-return 0;
+  reset_start_time = rtapi_get_time();
+  reset_mutex = rtapi_test_bit(0, &mutex);
+  count=0;
+  reset_end_time = rtapi_get_time();
+  return 0;
 }

@@ -1,34 +1,123 @@
 #!/usr/bin/env python3
 import sys
+import os
 
-l = [int(line.strip()) for line in open(sys.argv[1])]
-if len(l) != 3500:
-    print("result contained %d lines, not the expected 3500 lines!" % (len(l)))
-    raise SystemExit(1) # failure
+# Number of samples given to halsampler in test.hal
+MAX_LINES = 3500
 
-lineno = 0
+test_dir = os.path.dirname(sys.argv[1])
+if test_dir:
+    os.chdir(test_dir)
 
-got_reset = 0
-expected = 1
-for i in l:
-    lineno = lineno + 1
-    if i == 1:
-        if expected != 1: got_reset = 1
-        expected = i + 1
-        continue
+# If the error file exists, there's been a problem
+err_file = 'cpu_check_errors.txt'
+if os.path.exists(err_file):
+    num_lines = 0
+    for line in open(err_file, 'r'):
+        num_lines += 1
+        sys.stdout.write(line)
+    if num_lines == 0:
+        print("cpu_check.py failed without printing errors; stderr:")
+        for line in open('stderr', 'r'):
+            sys.stdout.write(line)
+    raise SystemExit(1)
 
-    if i != expected:
-        if expected == 1: 
-            print("line %d: got %d, expected %d" % (lineno, i, expected))
-        else:
-            print("line %d: got %d, expected %d or 1" % (lineno, i, expected))
+def add_to_timeline(timeline, func_name, ints):
+    ints_5 = (ints + [ints[-1]])[:6]
+    # Start
+    t_start = ints_5[2]
+    entry = dict(
+        func = func_name, event_type="start", count=ints_5[1],
+        mutex=ints_5[4], sample_num=ints_5[0])
+    if t_start in timeline:
+        print("Found dup:  orig %s; new %s" % (t_start, timeline[t_start], entry))
+    # print([t_start], entry)
+    timeline[t_start] = entry
+    # End
+    t_end = ints_5[3]
+    entry = dict(
+        func = func_name, event_type="end", count=ints_5[1],
+        mutex=ints_5[5], sample_num=ints_5[0])
+    if t_end in timeline:
+        print("Found dup at %d:  orig %s; new %s" % (t_end, timeline[t_end], entry))
+    # print([t_end], entry)
+    timeline[t_end] = entry
+
+
+def print_event(time, event, print_func=sys.stdout.write):
+    print_func("{} {:4} {:<9} {:<5} {:2} {}\n".format(
+        time, event['sample_num'], event['func'], event['event_type'],
+        event['count'], event['mutex']))
+
+def dump_to_file(timeline, fname='timeline.txt'):
+    with open(fname, 'w') as f:
+        for time in sorted(timeline.keys()):
+            print_event(time, timeline[time], print_func=f.write)
+
+timeline = dict()
+for fname, numlines in (
+        ("increment.txt", MAX_LINES),
+        ("release.txt", MAX_LINES),
+        ("reset.txt", MAX_LINES/10)):
+    count = 0
+    for line in open(fname):
+        count += 1
+        ints = [int(i) for i in line.strip().split()]
+        add_to_timeline(timeline, fname[:-4], ints)
+    if ints[0] != numlines-1:
+        print("%s contained %d lines, not the expected %s lines!" %
+              (fname, len(lines), MAX_LINES))
         raise SystemExit(1) # failure
+dump_to_file(timeline)
 
-    expected = i + 1
 
-if got_reset:
-    raise SystemExit(0) # success
+def print_timeline(time, timeline):
+    print("Columns:  time(ns) sample# function start/end count mutex")
 
-print("no reset in %d lines!" % (lineno-1))
-raise SystemExit(1) # failure
+    # Print 50 samples before error
+    for t in [i for i in sorted(timeline.keys()) if i < time][-50:]:
+        print_event(time, timeline[t])
 
+    print("*** Error detected here ***")
+
+    # Print 10 samples after error
+    for t in [i for i in sorted(timeline.keys()) if i >= time][:10]:
+        print_event(time, timeline[t])
+
+res = 0
+for time in sorted(timeline.keys()):
+    locals().update(timeline[time])
+
+    # print("{} {:<9} {:<5} {} {}".format(time, func, event_type, count, mutex))
+
+    if func == 'increment':
+        if event_type == 'start':
+            if mutex:
+                res+=1
+                print("Mutex set at entry to increment")
+        else:
+            if not mutex:
+                res+=1
+                print("Mutex unset at exit to increment")
+    if func == 'release':
+        if event_type == 'start':
+            if not mutex:
+                res+=1
+                print("Mutex unset at entry to release")
+        else:
+            if mutex:
+                res+=1
+                print("Mutex set at exit to release")
+    if func == 'reset':
+        if mutex:
+            res += 1
+            print("Mutex set at entry/exit to reset")
+    if func != 'reset' and count == 0:
+        print("Count is zero")
+
+    if res:
+        print("*** ERROR at time %d" % time)
+        print_timeline(time, timeline)
+        break
+
+raise SystemExit(res)

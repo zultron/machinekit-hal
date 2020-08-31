@@ -1,18 +1,44 @@
 setexact_for_test_suite_only
-loadrt sampler cfg=u depth=4096
-loadusr -Wn halsampler halsampler -N halsampler -n 3500
+loadrt sampler cfg=uUUbb,uUUbb,uUUb depth=1024,1024,1024
+loadusr rm -f increment.txt release.txt reset.txt
+loadusr -Wn halsampler.0 halsampler -N halsampler.0 -c 0 -n 3500 -t increment.txt
+loadusr -Wn halsampler.1 halsampler -N halsampler.1 -c 1 -n 3500 -t release.txt
+loadusr -Wn halsampler.2 halsampler -N halsampler.2 -c 2 -n 350 -t reset.txt
+loadusr -Wn cpu_check ./cpu_check.py -N cpu_check
 
-newthread fast 100000 fp
-newthread slow 1000000 fp
+newthread fast 100000 fp cpu=0
+newthread slow 1000000 fp cpu=0
 loadrt threadtest count=1
 
-net count <= threadtest.0.count
-net count => sampler.0.pin.0
+# All samplers read count
+net count threadtest.0.count => sampler.0.pin.0 sampler.1.pin.0 sampler.2.pin.0
 
+# increment function sampler.0
+net incr_start_time threadtest.0.incr-start-time => sampler.0.pin.1
+net incr_end_time threadtest.0.incr-end-time => sampler.0.pin.2
+net incr_mutex_in threadtest.0.incr-mutex-in => sampler.0.pin.3
+net incr_mutex_out threadtest.0.incr-mutex-out => sampler.0.pin.4
 addf threadtest.0.increment fast
 addf sampler.0 fast
 
+# release function sampler.1
+net rel_start_time threadtest.0.rel-start-time => sampler.1.pin.1
+net rel_end_time threadtest.0.rel-end-time => sampler.1.pin.2
+net rel_mutex_in threadtest.0.rel-mutex-in => sampler.1.pin.3
+net rel_mutex_iout threadtest.0.rel-mutex-out => sampler.1.pin.4
+addf threadtest.0.release fast
+addf sampler.1 fast
+
+# reset function sampler.2
+net reset_start_time threadtest.0.reset-start-time => sampler.2.pin.1
+net reset_end_time threadtest.0.reset-end-time => sampler.2.pin.2
+net reset_mutex threadtest.0.reset-mutex => sampler.2.pin.3
 addf threadtest.0.reset slow
+addf sampler.2 slow
 
 start
-waitusr  -i halsampler
+
+waitusr  -i halsampler.0
+waitusr  -i halsampler.1
+waitusr  -i halsampler.2
+waitusr cpu_check
