@@ -80,10 +80,8 @@ anywait(){
 	return 0 # Already exited
     fi
 
-    # Kill proc if requested
-    if test -n "$sig"; then
-	kill -$sig "$pid" >/dev/null 2>&1 || return 0
-    fi
+    # Send signal to proc
+    kill -$sig "$pid" >/dev/null 2>&1 || return 0
 
     # Wait to see if it exited
     for (( n=0; $n<$tries; $((n++)) )); do
@@ -148,7 +146,7 @@ Load(){
     local cmd=(${rtapi_msgd} --instance=$MK_INSTANCE $NAME_CMD
 			     --rtmsglevel=$DEBUG
 			     --usrmsglevel=$DEBUG
-                 --debug=$DEBUG
+			     --debug=$DEBUG
 			     --halsize=$HAL_SIZE $MSGD_OPTS)
     [ $DEBUG -eq 0 ] || echo "rtapi_msgd command:  ${cmd[@]}" >&2
     "${cmd[@]}" || (
@@ -170,9 +168,9 @@ Load(){
 }
 
 Unload(){
+    res=0
 
     # shutdown rtapi if it exists
-
     if CheckRunningProcs rtapi:$MK_INSTANCE; then
 	if [ $DEBUG -gt 0 ] ; then
 	    halcmd shutdown
@@ -180,13 +178,6 @@ Unload(){
 	    halcmd shutdown            >/dev/null 2>&1
         fi
     fi
-
-    # remove any hal-specific POSIX shm segments if they exist
-    # see src/rtapi/rtapi_shmkeys.h: SHM_FMT
-
-    INSTKEY=`printf 'hal-%d-' $MK_INSTANCE`
-    rm  -f  /dev/shm/${INSTKEY}* >/dev/null 2>&1
-
 
     # wait until rtapi_msgd has vanished. This assures
     # that the last user of the global data segment has vanished,
@@ -201,20 +192,33 @@ Unload(){
     # This helps to debug issues during the critical shutdown phase;
     # if msgd exited right away those messages would be lost.
 
-    # Wait 5s to see if rtapi_msgd exits on its own
-    if ! anywait msgd:$MK_INSTANCE 10 ''; then
+    # Wait 10s to see if rtapi_msgd exits on its own
+    if ! anywait msgd:$MK_INSTANCE 20; then
 	# It didn't; get nasty
-	echo "ERROR:  msgd:$MK_INSTANCE failed to exit on its own;" \
+	echo "WARNING:  msgd:$MK_INSTANCE failed to exit on its own;" \
 	     "sending SIGTERM" >&2
 	if ! anywait msgd:$MK_INSTANCE 20 TERM; then
-	    # ...and get even nastier if SIGTERM fails.  FIXME this needs
-	    # to be reviewed; if we get this far, then we might need
-	    # operator intervention, including debugging
-	    echo "ERROR:  msgd:$MK_INSTANCE failed to exit after SIGTERM;" >&2
-	    echo "sending SIGKILL" >&2
-	    kill -KILL $(FindRunningProcs msgd:$MK_INSTANCE)
+	    echo "ERROR:  msgd:$MK_INSTANCE failed to exit after SIGTERM;" \
+		 "sending SIGKILL" >&2
+	    if ! anywait msgd:$MK_INSTANCE 2 KILL; then
+		echo "ERROR:  msgd:$MK_INSTANCE failed to exit after SIGKILL" >&2
+		res=1
+	    fi
 	fi
     fi
+
+    # Now forcefully kill any lingering rtapi_app processes
+    if ! anywait rtapi:$MK_INSTANCE 2 KILL; then
+	echo "ERROR:  rtapi:$MK_INSTANCE failed to exit after SIGKILL" >&2
+	res=1
+    fi
+
+    # remove any hal-specific POSIX shm segments if they exist
+    # see src/rtapi/rtapi_shmkeys.h: SHM_FMT
+    INSTKEY=`printf 'hal-%d-' $MK_INSTANCE`
+    rm  -f  /dev/shm/${INSTKEY}* >/dev/null 2>&1
+
+    test $res = 0 || exit 1
 }
 
 CheckUnloaded(){
