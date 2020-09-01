@@ -71,6 +71,13 @@ for fname, numlines in (
         ("reset.txt", MAX_LINES/10)):
     dump_stats()
     count = 0
+    if not os.path.exists(fname):
+        print("Sampler file {} doesn't exist!".format(fname))
+        for line in open('stderr', 'rb'):
+            sys.stdout.write(repr(line)+'\n')
+        for line in open('result', 'rb'):
+            sys.stdout.write(repr(line)+'\n')
+        raise SystemExit(1)
     for line in open(fname):
         count += 1
         ints = [int(i) for i in line.strip().split()]
