@@ -304,6 +304,7 @@ static int compare_command(const void *namep, const void *commandp) {
 pid_t hal_systemv_nowait(char *const argv[]) {
     pid_t pid;
     int n;
+    char buf[LINELEN] = {};
 
     /* now we need to fork, and then exec .... */
     pid = fork();
@@ -316,14 +317,14 @@ pid_t hal_systemv_nowait(char *const argv[]) {
 	/* child process */
 	/* print debugging info if "very verbose" (-V) */
         for(n=0; argv[n] != NULL; n++) {
-	    rtapi_print_msg(RTAPI_MSG_DBG, "%s ", argv[n] );
+            strncat(buf, " ", LINELEN-1);
+            strncat(buf, argv[n], LINELEN-1);
 	}
+        rtapi_print_msg(RTAPI_MSG_DBG, "forking command: %s\n", buf);
         if (n == 0) {
             halcmd_error("hal_systemv_nowait: empty argv array passed in\n");
             exit(1);
         }
-	rtapi_print_msg(RTAPI_MSG_DBG, "\n" );
-
 
         /* call execv() to invoke command */
 	execvp(argv[0], argv);
