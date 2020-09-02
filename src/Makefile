@@ -658,7 +658,6 @@ install-dirs:
 		$(DESTDIR)$(mandir)/man1 \
 		$(DESTDIR)$(mandir)/man3 \
 		$(DESTDIR)$(mandir)/man9 \
-		$(DESTDIR)$(sysconfdir)/rsyslog.d \
 		$(DESTDIR)$(sysconfdir)/security/limits.d \
 		$(DESTDIR)$(sysconfdir)/udev/rules.d \
 		$(DESTDIR)$(sampleconfsdir) \
@@ -682,7 +681,6 @@ install-kernel-indep: install-dirs
 	$(FILE) ../share/pkgconfig/machinekit-hal.pc \
 	    $(DESTDIR)$(datadir)/pkgconfig
 
-	$(FILE) rtapi/rsyslogd-hal.conf $(DESTDIR)$(sysconfdir)/rsyslog.d/hal.conf
 	$(FILE) rtapi/shmdrv/limits.d-machinekit.conf \
 		$(DESTDIR)$(sysconfdir)/security/limits.d/machinekit.conf
 	$(FILE) ../etc/machinekit/machinekit.ini $(DESTDIR)$(sysconfdir)/machinekit

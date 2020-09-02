@@ -30,7 +30,6 @@
 #include <syslog.h>
 #include <uuid/uuid.h>
 #include <czmq.h>
-#include <syslog_async.h>
 
 #include <string>
 #include <unordered_set>
@@ -450,10 +449,8 @@ static int hal_setup(msgbusd_self_t *self)
 
 static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 {
-    syslog_async(LOG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
+    rtapi_print_msg(RTAPI_MSG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
 		    sig, strsignal(sig), get_current_dir_name());
-    closelog_async(); // let syslog_async drain
-    sleep(1);
     // reset handler for current signal to default
     signal(sig, SIG_DFL);
     // and re-raise so we get a proper core dump and stacktrace
@@ -504,7 +501,7 @@ read_global_config(msgbusd_self_t *self)
 	    if (parse_interface_prefs(s,  ifname, ip, &self->ifIndex) == 0) {
 		self->interface = strdup(ifname);
 		self->ipaddr = strdup(ip);
-		syslog_async(LOG_INFO, "%s %s: using preferred interface %s/%s\n",
+		rtapi_print_msg(RTAPI_MSG_INFO, "%s %s: using preferred interface %s/%s\n",
 			     progname, mkini,
 			     self->interface, self->ipaddr);
 	    } else {
@@ -629,7 +626,6 @@ int main (int argc, char *argv[])
 	    exit(0);
 	}
     }
-    openlog("", LOG_NDELAY , logopt);
 
     if (read_global_config(&self))
 	exit(1);

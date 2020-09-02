@@ -1,7 +1,6 @@
 etc/machinekit/rtapi.ini
 etc/machinekit/machinekit.ini
 etc/modprobe.d/hal.conf
-etc/rsyslog.d/hal.conf
 etc/security/limits.d/machinekit.conf
 usr/bin/*
 usr/lib/*.so.*

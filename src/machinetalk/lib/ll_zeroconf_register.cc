@@ -27,8 +27,8 @@
 
 
 #include "config.h"
+#include "rtapi.h"
 #include "ll-zeroconf.hh"
-#include "syslog_async.h"
 #include "czmq.h"
 #include "czmq-watch.h"
 
@@ -40,13 +40,13 @@ static void register_stuff(register_context_t *rctx)
 {
 
     const char *name = avahi_client_get_host_name_fqdn(rctx->client);
-    syslog_async(LOG_DEBUG, "%s: actual hostname as announced by avahi='%s'", __FUNCTION__, name);
+    rtapi_print_msg(RTAPI_MSG_DBG, "%s: actual hostname as announced by avahi='%s'", __FUNCTION__, name);
 
     if (!rctx->group) {
         if (!(rctx->group = avahi_entry_group_new(rctx->client,
 						  publish_reply,
 						  rctx))) {
-            syslog_async(LOG_ERR,
+            rtapi_print_msg(RTAPI_MSG_ERR,
 			 "zeroconf: Failed to create avahi entry group: %s\n",
 			 avahi_strerror(avahi_client_errno(rctx->client)));
             goto fail;
@@ -70,7 +70,7 @@ static void register_stuff(register_context_t *rctx)
 						 NULL,
 						 rctx->service->port,
 						 rctx->service->txt) < 0) {
-            syslog_async(LOG_ERR,
+            rtapi_print_msg(RTAPI_MSG_ERR,
 			 "zeroconf: Failed to add service: %s\n",
 			 avahi_strerror(avahi_client_errno(rctx->client)));
             goto fail;
@@ -85,14 +85,14 @@ static void register_stuff(register_context_t *rctx)
 						      rctx->service->type,
 						      NULL,
 						      (char*) i->text) < 0) {
-		syslog_async(LOG_ERR,
+		rtapi_print_msg(RTAPI_MSG_ERR,
 			     "zeroconf: Failed to add subtype '%s': %s\n",
 			     i->text, avahi_strerror(avahi_client_errno(rctx->client)));
 		goto fail;
             }
 	}
         if (avahi_entry_group_commit(rctx->group) < 0) {
-            syslog_async(LOG_ERR,
+            rtapi_print_msg(RTAPI_MSG_ERR,
 			 "zeroconf: Failed to commit entry group: %s\n",
 			 avahi_strerror(avahi_client_errno(rctx->client)));
             goto fail;
@@ -121,7 +121,7 @@ static void publish_reply(AvahiEntryGroup *g,
 	assert(n);
 	avahi_free(rctx->name);
 	rctx->name = n;
-	syslog_async(LOG_INFO,
+	rtapi_print_msg(RTAPI_MSG_INFO,
 		     "zeroconf: collision - register alternative"
 		     " service name: '%s'\n",
 		     rctx->name);
@@ -129,7 +129,7 @@ static void publish_reply(AvahiEntryGroup *g,
 	break;
     }
     case AVAHI_ENTRY_GROUP_FAILURE:
-	syslog_async(LOG_ERR,
+	rtapi_print_msg(RTAPI_MSG_ERR,
 		     "zeroconf: Failed to register service '%s': %s (avahi running?)\n",
 		     rctx->name,
 		     avahi_strerror(avahi_client_errno(rctx->client)));
@@ -139,12 +139,12 @@ static void publish_reply(AvahiEntryGroup *g,
     case AVAHI_ENTRY_GROUP_UNCOMMITED:
 	break;
     case AVAHI_ENTRY_GROUP_REGISTERING:
-	syslog_async(LOG_DEBUG, "zeroconf: registering: '%s'\n", rctx->name);
+	rtapi_print_msg(RTAPI_MSG_DBG, "zeroconf: registering: '%s'\n", rctx->name);
 	break;
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
 	{
 	    char *txt = avahi_string_list_to_string(rctx->service->txt);
-	    syslog_async(LOG_INFO,
+	    rtapi_print_msg(RTAPI_MSG_INFO,
 			 "zeroconf: registered '%s' %s %d TXT %s\n",
 			 rctx->name, rctx->service->type, rctx->service->port, txt);
 	    avahi_free(txt);
@@ -182,20 +182,20 @@ static void client_callback(AvahiClient *client,
 						  client_callback,
 						  rctx,
 						  &error))) {
-		syslog_async(LOG_ERR,
+		rtapi_print_msg(RTAPI_MSG_ERR,
 			     "zeroconf: Failed to contact mDNS server: %s\n",
 			     avahi_strerror(error));
 		avahi_czmq_poll_quit(rctx->czmq_poll);
 	    }
 	} else {
-	    syslog_async(LOG_ERR,"zeroconf: Client failure: %s\n",
+	    rtapi_print_msg(RTAPI_MSG_ERR,"zeroconf: Client failure: %s\n",
 			 avahi_strerror(avahi_client_errno(client)));
 	    avahi_czmq_poll_quit(rctx->czmq_poll);
 	}
 	break;
 
     case AVAHI_CLIENT_CONNECTING:
-	syslog_async(LOG_ERR, "zeroconf: connecting - mDNS server not yet available"
+	rtapi_print_msg(RTAPI_MSG_ERR, "zeroconf: connecting - mDNS server not yet available"
 		     " (avahi-daemon not installed or not runnung?)\n");
 
 	;
@@ -224,7 +224,7 @@ register_context_t *ll_zeroconf_register(zservice_t *s, AvahiCzmqPoll *av_loop)
 					  client_callback,
 					  rctx,
 					  &error))) {
-        syslog_async(LOG_ERR,
+        rtapi_print_msg(RTAPI_MSG_ERR,
 		     "zeroconf: Failed to create avahi client object: %s\n",
 		     avahi_strerror(error));
         return NULL;
@@ -240,7 +240,7 @@ int ll_zeroconf_unregister(register_context_t *rctx)
         return 0;
     }
 
-    syslog_async(LOG_INFO, "zeroconf: unregistering '%s'\n", rctx->name);
+    rtapi_print_msg(RTAPI_MSG_INFO, "zeroconf: unregistering '%s'\n", rctx->name);
     if (rctx->client)
         avahi_client_free(rctx->client);
 

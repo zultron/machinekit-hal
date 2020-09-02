@@ -54,7 +54,6 @@
 #include <errno.h>
 #include <malloc.h>
 #include <assert.h>
-#include <syslog_async.h>
 #include <limits.h>
 #include <sys/prctl.h>
 #include <mk-inifile.h>
@@ -166,7 +165,6 @@ global_data_t *global_data;
 static int init_actions(int instance);
 static void exit_actions(int instance);
 static int harden_rt(void);
-static void stderr_rtapi_msg_handler(msg_level_t level, const char *fmt, va_list ap);
 static int record_instparms(Module &mi);
 
 static void configure_flavor(machinetalk::Container &pbreply)
@@ -695,7 +693,7 @@ static int attach_global_segment()
 	if (retval < 0) {
 	    tries--;
 	    if (tries == 0) {
-		syslog_async(LOG_ERR,
+		rtapi_print_msg(RTAPI_MSG_ERR,
 		       "rtapi_app:%d: ERROR: cannot attach global segment key=0x%x %s\n",
 		       rtapi_instance_loc, globalkey, strerror(-retval));
 		return retval;
@@ -706,7 +704,7 @@ static int attach_global_segment()
     } while (retval < 0);
 
     if (size < (int) sizeof(global_data_t)) {
-	syslog_async(LOG_ERR,
+	rtapi_print_msg(RTAPI_MSG_ERR,
 	       "rtapi_app:%d global segment size mismatch: expect >%zu got %d\n",
 	       rtapi_instance_loc, sizeof(global_data_t), size);
 	return -EINVAL;
@@ -716,7 +714,7 @@ static int attach_global_segment()
     while  (global_data->magic !=  GLOBAL_READY) {
 	tries--;
 	if (tries == 0) {
-	    syslog_async(LOG_ERR,
+	    rtapi_print_msg(RTAPI_MSG_ERR,
 		   "rtapi_app:%d: ERROR: global segment magic not changing to ready: magic=0x%x\n",
 		   rtapi_instance_loc, global_data->magic);
 	    return -EINVAL;
@@ -724,7 +722,7 @@ static int attach_global_segment()
 	struct timespec ts = {0, 500 * 1000 * 1000}; //ms
 	nanosleep(&ts, NULL);
     }
-    syslog_async(LOG_DEBUG,
+    rtapi_print_msg(RTAPI_MSG_DBG,
                  "rtapi_app:%d: Attached global segment magic=0x%x\n",
                  rtapi_instance_loc, global_data->magic);
 
@@ -991,8 +989,6 @@ static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 	if (global_data)
 	    global_data->rtapi_app_pid = 0;
 
-	closelog_async(); // let syslog_async drain
-        sleep(1);
 	// reset handler for current signal to default
         signal(sig, SIG_DFL);
 	// and re-raise so we get a proper core dump and stacktrace
@@ -1049,7 +1045,7 @@ s_handle_timer(zloop_t *loop, int  timer_id, void *args)
     (void)args;
     if (global_data->rtapi_msgd_pid == 0) {
 	// cant log this via rtapi_print, since msgd is gone
-	syslog_async(LOG_ERR,"rtapi_msgd went away, exiting\n");
+	rtapi_print_msg(RTAPI_MSG_ERR,"rtapi_msgd went away, exiting\n");
 	exit_actions(rtapi_instance_loc);
 	if (global_data)
 	    global_data->rtapi_app_pid = 0;
@@ -1063,30 +1059,28 @@ static int mainloop(size_t  argc, char **argv)
 {
     int retval;
     unsigned i;
-    // Hack:  Pick constant length 10, enough space for "msgd:xxx", to
-    // silence compiler warnings
-#   define PROC_TITLE_LEN 10
-    static char proctitle[PROC_TITLE_LEN];
 
-    // set new process name
-    snprintf(proctitle, PROC_TITLE_LEN, "rtapi:%d",rtapi_instance_loc);
-    strncpy(argv[0], proctitle, PROC_TITLE_LEN);
+    // set new process name and clean out cl args
+    memset(argv[0], '\0', strlen(argv[0]));
+    snprintf(argv[0], 10, "rtapi:%d", rtapi_instance_loc);
+    backtrace_init(argv[0]);
 
     for (i = 1; i < argc; i++)
 	memset(argv[i], '\0', strlen(argv[i]));
 
-    backtrace_init(proctitle);
+    // Set name printed in logs
+    rtapi_set_logtag("rtapi_app");
 
     // set this thread's name so it can be identified in ps/top as
     // rtapi:<instance>
-    if (prctl(PR_SET_NAME, proctitle) < 0) {
-	syslog_async(LOG_ERR,	"rtapi_app: prctl(PR_SETNAME,%s) failed: %s\n",
+    if (prctl(PR_SET_NAME, argv[0]) < 0) {
+	rtapi_print_msg(RTAPI_MSG_ERR,	"rtapi_app: prctl(PR_SETNAME,%s) failed: %s\n",
 	       argv[0], strerror(errno));
     }
 
     // attach global segment which rtapi_msgd already prepared
     if ((retval = attach_global_segment()) != 0) {
-	syslog_async(LOG_ERR, "%s: FATAL - failed to attach to global segment\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: FATAL - failed to attach to global segment\n",
 	       argv[0]);
 	exit(retval);
     }
@@ -1096,15 +1090,26 @@ static int mainloop(size_t  argc, char **argv)
     // otherwise log messages would vanish
     if ((global_data->rtapi_msgd_pid == 0) ||
 	kill(global_data->rtapi_msgd_pid, 0) != 0) {
-	syslog_async(LOG_ERR,"%s: rtapi_msgd pid invalid: %d, exiting\n",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: rtapi_msgd pid invalid: %d, exiting\n",
 	       argv[0], global_data->rtapi_msgd_pid);
 	exit(EXIT_FAILURE);
     }
 
-    // from here on it is safe to use rtapi_print() and friends as
-    // the error ring is now set up and msgd is logging it
-    rtapi_set_logtag("rtapi_app");
-    rtapi_set_msg_level(global_data->rt_msg_level);
+    // from here on it is safe to use the ring buffer message handler
+    // since the error ring is now set up and msgd is logging it
+    // if (! rtapi_message_buffer_ready()) {
+    //   rtapi_print_msg(RTAPI_MSG_ERR, "Message buffer not initialized!  Exiting");
+    //   exit(1);
+    // }
+    if (! foreground) {
+        rtapi_set_msg_handler(ring_rtapi_msg_handler);
+        rtapi_set_msg_level(global_data->rt_msg_level);
+        rtapi_print_msg(RTAPI_MSG_INFO,"%s: rtapi_app logging through message ring\n",
+                        argv[0]);
+    } else {
+        rtapi_print_msg(RTAPI_MSG_INFO,"%s: rtapi_app logging to console\n",
+                        argv[0]);
+    }
 
     // load rtapi and hal_lib
     // - After this, it's safe to run any flavor_* stuff
@@ -1447,7 +1452,6 @@ int main(int argc, char **argv)
 
     uuid_generate_time(process_uuid);
     uuid_unparse(process_uuid, process_uuid_str);
-    int option = LOG_NDELAY;
 
     while (1) {
 	int option_index = 0;
@@ -1472,7 +1476,6 @@ int main(int argc, char **argv)
 
 	case 'F':
 	    foreground = 1;
-	    rtapi_set_msg_handler(stderr_rtapi_msg_handler);
 	    break;
 
 	case 'i':
@@ -1498,9 +1501,6 @@ int main(int argc, char **argv)
 	case 'R':
 	    service_uuid = strdup(optarg);
 	    break;
-	case 's':
-	    option |= LOG_PERROR;
-	    break;
 	case 'z':
 		z_debug = 1;
 		break;
@@ -1516,11 +1516,6 @@ int main(int argc, char **argv)
 	    exit(0);
 	}
     }
-
-    openlog_async(argv[0], option, LOG_LOCAL1);
-    setlogmask_async(LOG_UPTO(debug + 2));
-    // max out async syslog buffers for slow system in debug mode
-    tunelog_async(99,10);
 
     if (trap_signals && (getenv("NOSIGHDLR") != NULL))
 	trap_signals = false;
@@ -1581,13 +1576,6 @@ int main(int argc, char **argv)
 	// dont run as root XXX
     }
     exit(mainloop(argc, argv));
-}
-
-// use this handler if -F/--foreground was given
-static void stderr_rtapi_msg_handler(msg_level_t level,
-				     const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
 }
 
 static void remove_module(std::string name)

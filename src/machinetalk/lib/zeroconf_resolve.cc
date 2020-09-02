@@ -14,8 +14,8 @@
 
 
 #include "config.h"
+#include "rtapi.h"
 #include "ll-zeroconf.hh"
-#include "syslog_async.h"
 
 #define DEFAUL_TIMEOUT 3000 // msec to resolution
 
@@ -42,7 +42,7 @@ static void resolve_callback(AvahiServiceResolver *r,
     switch (event) {
 
     case AVAHI_RESOLVER_FAILURE:
-	syslog_async(LOG_ERR,
+	rtapi_print_msg(RTAPI_MSG_ERR,
 		     "%s: (Resolver) Failed to resolve service"
 		     " '%s' of type '%s' in domain '%s': %s\n",
 		     __func__, name, type, domain,
@@ -75,7 +75,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 		    char a[AVAHI_ADDRESS_STR_MAX], *t;
 		    avahi_address_snprint(a, sizeof(a), address);
 		    t = avahi_string_list_to_string(txt);
-		    syslog_async(LOG_INFO,
+		    rtapi_print_msg(RTAPI_MSG_INFO,
 				 "%s:  Service matched '%s' of type '%s' in domain '%s' %s:%u %s TXT=%s\n",
 				 __func__, name, type, domain,  host_name, port, a,  t);
 		    avahi_free(t);
@@ -83,7 +83,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 		    return;
 		}
 	    }
-	    syslog_async(LOG_INFO,
+	    rtapi_print_msg(RTAPI_MSG_INFO,
 			 "%s: unmatched Service '%s' of type '%s' in domain '%s' %s:%u\n",
 			 __func__, name, type, domain,  host_name, port);
 	}
@@ -108,14 +108,14 @@ static void browse_callback(AvahiServiceBrowser *b,
     // Called whenever a new services becomes available on the LAN or is removed from the LAN
     switch (event) {
     case AVAHI_BROWSER_FAILURE:
-	syslog_async(LOG_ERR,"%s: (Browser) %s\n",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: (Browser) %s\n",
 		     __func__,
 		     avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(b))));
 	avahi_simple_poll_quit(rctx->simple_poll);
 	return;
 
     case AVAHI_BROWSER_NEW:
-	syslog_async(LOG_DEBUG,
+	rtapi_print_msg(RTAPI_MSG_DBG,
 		     "%s: (Browser) NEW: service '%s' of type '%s' in domain '%s' ifindex=%d protocol=%d\n",
 		     __func__,name, type, domain, interface, protocol);
 	rctx->resolver = avahi_service_resolver_new(c,
@@ -128,20 +128,20 @@ static void browse_callback(AvahiServiceBrowser *b,
 						    (AvahiLookupFlags)0,
 						    resolve_callback, rctx);
 	if (rctx->resolver == NULL)
-	    syslog_async(LOG_ERR,"%s: Failed to start resolver for '%s': %s\n",
+	    rtapi_print_msg(RTAPI_MSG_ERR,"%s: Failed to start resolver for '%s': %s\n",
 			 __func__, name, avahi_strerror(avahi_client_errno(c)));
 	break;
 
     case AVAHI_BROWSER_REMOVE:
 	memset(ifname, 0, sizeof(ifname));
 	if_indextoname(interface, ifname);
-	syslog_async(LOG_DEBUG,"%s: (Browser) REMOVE: service '%s' of type '%s' in domain '%s' if=%s\n",
+	rtapi_print_msg(RTAPI_MSG_DBG,"%s: (Browser) REMOVE: service '%s' of type '%s' in domain '%s' if=%s\n",
 		     __func__, name, type, domain, ifname);
 	break;
 
     // case AVAHI_BROWSER_ALL_FOR_NOW:
     // case AVAHI_BROWSER_CACHE_EXHAUSTED:
-    // 	syslog_async(LOG_DEBUG,"%s: (Browser) %s\n",
+    // 	rtapi_print_msg(RTAPI_MSG_DBG,"%s: (Browser) %s\n",
     // 		     __func__, event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
     //
     default:
@@ -157,7 +157,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state,
 
     // Called whenever the client or server state changes
     if (state == AVAHI_CLIENT_FAILURE) {
-	syslog_async(LOG_ERR,"%s: Server connection failure: %s\n",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: Server connection failure: %s\n",
 	       __func__, avahi_strerror(avahi_client_errno(c)));
 	rctx->resolve->result = SD_CLIENT_FAILURE;
         avahi_simple_poll_quit(rctx->simple_poll);
@@ -167,7 +167,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state,
 static void resolve_timeout(AvahiTimeout *timeout, void* userdata)
 {
     resolve_context_t *rctx = (resolve_context_t *)userdata;
-    syslog_async(LOG_ERR,"%s: Timeout resolving service type '%s'\n",
+    rtapi_print_msg(RTAPI_MSG_ERR,"%s: Timeout resolving service type '%s'\n",
 			 __func__, rctx->resolve->type);
     rctx->resolve->result = SD_TIMEOUT;
     avahi_simple_poll_quit(rctx->simple_poll);
@@ -199,7 +199,7 @@ resolve_context_t *ll_zeroconf_resolve(zresolve_t *res)
 				    rctx,
 				    &error);
     if (!rctx->client) {
-	syslog_async(LOG_ERR,"%s: Failed to create client: '%s'\n",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: Failed to create client: '%s'\n",
 			 __func__, avahi_strerror(error));
         goto fail;
     }
@@ -211,7 +211,7 @@ resolve_context_t *ll_zeroconf_resolve(zresolve_t *res)
 						    (AvahiLookupFlags)0,
 						    browse_callback,
 						    rctx))) {
-	syslog_async(LOG_ERR,"%s: Failed to create service browser: %s\n",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: Failed to create service browser: %s\n",
 		     __func__, avahi_strerror(avahi_client_errno(rctx->client)));
         goto fail;
     }

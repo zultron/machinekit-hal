@@ -422,13 +422,21 @@ extern int rtapi_get_msg_level(void);
     'level' is RTAPI_MSG_ALL, a level which should not normally be used
     with rtapi_print_msg().
 */
-typedef void(*rtapi_msg_handler_t)(msg_level_t level, const char *fmt,
+typedef int(*rtapi_msg_handler_t)(msg_level_t level, const char *fmt,
 				   va_list ap);
 
 
 typedef void (*rtapi_set_msg_handler_t)(rtapi_msg_handler_t);
 
+extern int rtapi_message_buffer_ready(void);
+
 extern void rtapi_set_msg_handler(rtapi_msg_handler_t handler);
+
+extern int default_rtapi_msg_handler(msg_level_t level, const char *fmt,
+                                      va_list ap);
+
+extern int ring_rtapi_msg_handler(msg_level_t level, const char *fmt,
+                                   va_list ap);
 
 typedef rtapi_msg_handler_t (*rtapi_get_msg_handler_t)(void);
 

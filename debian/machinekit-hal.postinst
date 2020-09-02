@@ -7,9 +7,6 @@
 touch /var/log/hal.log
 chmod 666 /var/log/hal.log
 
-# restart the rsyslogd to start logging to /var/log/hal.conf
-service rsyslog restart 2>/dev/null || true
-
 
 ###############################################################################
 

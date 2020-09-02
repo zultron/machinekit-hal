@@ -24,8 +24,6 @@ extern "C" {
     {
 	fprintf(stderr, "signal %d - '%s' received, dumping core (current dir=%s)",
 		sig, strsignal(sig), get_current_dir_name());
-	closelog_async(); // let syslog drain
-	sleep(1);
 	sleep(1);
 	// reset handler for current signal to default
 	signal(sig, SIG_DFL);

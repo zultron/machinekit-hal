@@ -17,7 +17,7 @@
  */
 
 #include "pbutil.hh"
-#include "syslog_async.h"
+#include "rtapi.h"
 #include <czmq.h>
 #include <google/protobuf/text_format.h>
 
@@ -46,7 +46,7 @@ send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket)
 
     f = zframe_new(NULL, c.ByteSize());
     if (f == NULL) {
-	syslog_async(LOG_ERR,"%s: FATAL - failed to zframe_new(%d)",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: FATAL - failed to zframe_new(%d)",
 			__func__, c.ByteSize());
 	return -ENOMEM;
     }
@@ -59,7 +59,7 @@ send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket)
     unsigned char *end = c.SerializeWithCachedSizesToArray(buf);
     if ((end - buf) == 0) {
 	// serialize failed
-	syslog_async(LOG_ERR,"%s: FATAL - SerializeWithCachedSizesToArray() failed",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: FATAL - SerializeWithCachedSizesToArray() failed",
 			__func__);
 	goto DONE;
     }
@@ -67,7 +67,7 @@ send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket)
     for (size_t i = 0; i < nsize; ++i){
         zframe_t *f = zmsg_pop (dest); 
 	if(f == NULL){                          
-	    syslog_async(LOG_ERR, "send_pbcontainer(): NULL zframe_t 'f' passed");
+	    rtapi_print_msg(RTAPI_MSG_ERR, "send_pbcontainer(): NULL zframe_t 'f' passed");
 	    retval = -1;
 	    goto DONE;
 	    }
@@ -75,8 +75,8 @@ send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket)
             retval = zframe_send (&f, socket, ZMQ_MORE);
             if (retval) {
                 std::string str( (const char *) zframe_data(f), zframe_size(f));
-                syslog_async(LOG_ERR,"%s: FATAL - failed to send destination frame: '%.*s'",
-                             __func__, str.size(), str.c_str());
+                rtapi_print_msg(RTAPI_MSG_ERR,"%s: FATAL - failed to send destination frame: '%.*s'",
+                                __func__, (int)str.size(), str.c_str());
                 goto DONE;
             }
         }
@@ -84,8 +84,8 @@ send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket)
     }
     retval = zframe_send(&f, socket, 0);
     if (retval) {
-	syslog_async(LOG_ERR,"%s: FATAL - failed to zframe_sendm(%d)",
-			    __func__, end-buf);
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s: FATAL - failed to zframe_sendm(%d)",
+                        __func__, (int)(end-buf));
     }
  DONE:
     c.Clear();
@@ -109,13 +109,13 @@ note_printf(machinetalk::Container &c, const char *fmt, ...)
     va_end(ap);
     c.add_note(buf, n);
 
-    // split into lines to keep syslog_async happy
+    // split into lines
     char *save, *token, *s = buf;
     while (1) {
 	token = strtok_r(s, "\n", &save);
 	if (token == NULL)
 	    break;
-	syslog_async(LOG_ERR, token);
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s", token);
 	s = NULL;
     }
     return n;

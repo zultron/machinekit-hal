@@ -55,12 +55,6 @@ if [ "$DEBUG" == "" ]  ; then
 fi
 DEBUG=$((10#0$DEBUG))  # be sure $DEBUG is some base-10 number
 
-# SYSLOG_TO_STDERR:  when set, log to stdout instead of syslog
-if test -n "$SYSLOG_TO_STDERR"; then
-    MSGD_OPTS+=" -s"
-    RTAPI_APP_OPTS+=" -s"
-fi
-
 # set the default instance, if not already set
 MK_INSTANCE=`printf '%d' $MK_INSTANCE`
 if [ "$MK_INSTANCE_NAME" != "" ]  ; then

@@ -1,15 +1,11 @@
 
 
 #include "config.h"
-
-#ifndef SYSLOG_FACILITY
-#define SYSLOG_FACILITY LOG_LOCAL1  // where all rtapi/ulapi logging goes
-#endif
+#include "rtapi.h"
 
 #include <mk-service.hh>
 #include <mk-zeroconf.hh>
 #include <mk-inifile.h>
-#include <syslog_async.h>
 
 
 #include <vector>
@@ -33,7 +29,7 @@ int mk_getnetopts(mk_netopts_t *n)
     assert(n->rundir != NULL);
 
     if (gethostname(buffer, sizeof(buffer)) < 0) {
-	syslog_async(LOG_ERR, "gethostname() failed ?! %s\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "gethostname() failed ?! %s\n",
 		     strerror(errno));
 	goto DONE;
     }
@@ -45,14 +41,14 @@ int mk_getnetopts(mk_netopts_t *n)
     n->process_uuid = strdup(buffer);
 
     if ((inifile = getenv(mkini)) == NULL) {
-	syslog_async(LOG_ERR, "FATAL - '%s' missing in environment\n", mkini);
+	rtapi_print_msg(RTAPI_MSG_ERR, "FATAL - '%s' missing in environment\n", mkini);
 	goto DONE;
     }
     if (n->mkinifp)
 	fclose(n->mkinifp);
 
     if ((n->mkinifp = fopen(inifile,"r")) == NULL) {
-	syslog_async(LOG_ERR, "cant open inifile '%s'\n", inifile);
+	rtapi_print_msg(RTAPI_MSG_ERR, "cant open inifile '%s'\n", inifile);
 	return retval;
     }
 
@@ -62,12 +58,12 @@ int mk_getnetopts(mk_netopts_t *n)
 	    n->service_uuid = strdup(n->service_uuid);
     }
     if (n->service_uuid == NULL) {
-	syslog_async(LOG_ERR, "no [MACHINEKIT]MKUUID found in %s\n", inifile);
+	rtapi_print_msg(RTAPI_MSG_ERR, "no [MACHINEKIT]MKUUID found in %s\n", inifile);
 	goto DONE;
     }
 
     if (uuid_parse(n->service_uuid, n->svc_uuid)) {
-	syslog_async(LOG_ERR, "service UUID: syntax error: '%s'",
+	rtapi_print_msg(RTAPI_MSG_ERR, "service UUID: syntax error: '%s'",
 		     n->service_uuid);
 	goto DONE;
     }
@@ -110,7 +106,7 @@ static int bind_ifs(mk_socket_t *s, const argvec_t &ifs)
 	// use this port number for the rest of the ifs
 	s->port = zsock_bind(s->socket, "%s", uri.c_str());
 	if (s->port < 0) {
-	    syslog_async(LOG_ERR, "bind to '%s' failed: %s",
+	    rtapi_print_msg(RTAPI_MSG_ERR, "bind to '%s' failed: %s",
 			 uri.c_str(), strerror(errno));
 	    return -1;
 	}
@@ -168,7 +164,7 @@ int mk_bindsocket(mk_netopts_t *n, mk_socket_t *s)
 		 n->rundir, n->rtapi_instance, s->tag, n->service_uuid);
 	s->port = zsock_bind(s->socket, "%s", buf);
 	if (s->port < 0)
-	    syslog_async(LOG_ERR, "bind(%s): %s\n", buf, strerror(errno));
+	    rtapi_print_msg(RTAPI_MSG_ERR, "bind(%s): %s\n", buf, strerror(errno));
 
 	// construct URI for mDNS announcement
 	// Compiler warnings
@@ -217,7 +213,7 @@ int mk_announce(mk_netopts_t *n, mk_socket_t *s, const char *headline, const cha
 					     protocol,
 					     n->av_loop);
     if (s->publisher == NULL) {
-	syslog_async(LOG_ERR, "failed to start zeroconf  publisher for '%s'\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "failed to start zeroconf  publisher for '%s'\n",
 		     name);
 	return -1;
     }

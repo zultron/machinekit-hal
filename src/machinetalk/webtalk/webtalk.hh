@@ -18,10 +18,6 @@
 
 #define PROXY_PORT 7681  // serves both http and ws
 
-#ifndef SYSLOG_FACILITY
-#define SYSLOG_FACILITY LOG_LOCAL1  // where all rtapi/ulapi logging goes
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -67,7 +63,6 @@ enum wt_log_levels {
 
 
 #include <mk-inifile.h>
-#include <syslog_async.h>
 #include "mk-service.hh"
 #include "mk-zeroconf.hh"
 
@@ -192,7 +187,6 @@ typedef struct wtconf {
     unsigned ifIndex;
 #endif
     bool foreground;
-    bool log_stderr;
     bool use_ssl;
     int service_timer;
     struct lws_context_creation_info info;

@@ -16,7 +16,7 @@ TARGETS += $(addprefix ../include/, \
 	pbutil.hh       \
 	setup_signals.h \
 	mk-backtrace.h \
-	syslog_async.h )
+	)
 
 # protobuf support functions - usable without HAL (eg remotely)
 LIBMTALK_SRCS := $(addprefix $(LIBMTALK_DIR)/, \
@@ -24,7 +24,6 @@ LIBMTALK_SRCS := $(addprefix $(LIBMTALK_DIR)/, \
 	inihelp.cc \
 	czmq-watch.c \
 	setup_signals.c \
-	syslog_async.c \
 	ll_zeroconf_register.cc \
 	zeroconf_resolve.cc \
 	mk_zeroconf.cc \
@@ -33,9 +32,6 @@ LIBMTALK_SRCS := $(addprefix $(LIBMTALK_DIR)/, \
 	json2pb.cc)
 
 USERSRCS += $(LIBMTALK_SRCS) # $(HALLIBMTALK_SRCS)
-
-SYSLOGASYNC_CFLAGS :=
-SYSLOGASYNC_LDFLAGS :=
 
 PB2JSONLIB_CCXFLAGS :=  -g -O3 -shared -Wall -fPIC  $(PROTOBUF_CFLAGS) $(JANSSON_CFLAGS)
 PB2JSONLIB_LDFLAGS := $(PROTOCXXLIB) $(JANSSON_LIBS)
@@ -47,7 +43,6 @@ $(call TOOBJSDEPS, $(LIBMTALK_SRCS)) : EXTRAFLAGS=-fPIC -g -O3 \
 	$(LIBMTALK_CXXFLAGS) \
 	$(AVAHI_CFLAGS) \
 	$(CZMQ_CFLAGS) \
-	$(SYSLOGASYNC_CFLAGS) \
 	$(PB2JSONLIB_CXXFLAGS)
 
 TARGETS += ../lib/libmtalk.so ../lib/libmtalk.so.0

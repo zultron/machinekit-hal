@@ -31,10 +31,6 @@
 #include "rtapi.h"
 #include "shmdrv.h"
 #include "ring.h"
-#include "syslog_async.h"
-#ifndef SYSLOG_FACILITY
-#define SYSLOG_FACILITY LOG_LOCAL1  // where all rtapi/ulapi logging goes
-#endif
 #define RTPRINTBUFFERLEN 256
 
 #include <stdio.h>		/* libc's vsnprintf() */
@@ -65,7 +61,6 @@ extern ringbuffer_t rtapi_message_buffer;
 #endif
 
 static char logtag[TAGSIZE];
-static const char *origins[] = { "kernel", "rt", "user", "*invalid*" };
 
 typedef struct {
     rtapi_msgheader_t hdr;
@@ -79,73 +74,77 @@ int vs_ringlogfv(const msg_level_t level,
 		 const char *format,
 		 va_list ap)
 {
-    int n;
-    rtapi_msg_t msg;
-
     if (get_msg_level() == RTAPI_MSG_NONE)
 	return 0;
     if (level > get_msg_level())
 	return 0;
 
+    if (rtapi_message_buffer.header == NULL) {
+	// early startup, global_data & log ring not yet initialized
+	// log the message to stderr
+
+      return default_rtapi_msg_handler(level, format, ap);
+    }
+
+    rtapi_msg_t msg;
     msg.hdr.origin = origin;
     msg.hdr.pid = pid;
     msg.hdr.level = level;
     strncpy(msg.hdr.tag, tag, sizeof(msg.hdr.tag));
 
+    /* if (rtapi_message_buffer.header->use_wmutex && */
+    /*     rtapi_mutex_try(&rtapi_message_buffer.header->wmutex)) { */
+    /*     global_data->error_ring_locked++; */
+    /*     return -EBUSY; */
+    /* } */
+
     // do format outside critical section
-    n = vsnprintf(msg.buf, RTPRINTBUFFERLEN, format, ap);
+    int n = vsnprintf(msg.buf, RTPRINTBUFFERLEN, format, ap);
 
-    if (rtapi_message_buffer.header != NULL) {
-	if (rtapi_message_buffer.header->use_wmutex &&
-	    rtapi_mutex_try(&rtapi_message_buffer.header->wmutex)) {
-	    global_data->error_ring_locked++;
-	    return -EBUSY;
-	}
-	// use copying writer to shorten criticial section
-	record_write(&rtapi_message_buffer, (void *) &msg,
-		     sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
-	if (rtapi_message_buffer.header->use_wmutex)
-	    rtapi_mutex_give(&rtapi_message_buffer.header->wmutex);
-    } else {
-	// early startup, global_data & log ring not yet initialized
-	// log the message to both stderr and syslog
-
-	static int log_opened;
-	if (!log_opened) {
-	    log_opened = async_log_open();
-	    if (!log_opened) {
-		openlog_async("startup", LOG_NDELAY , SYSLOG_FACILITY);
-		log_opened = 1;
-	    }
-	}
-
-	if (!strchr(msg.buf, '\n'))
-	    strcat(msg.buf,"\n");
-	fprintf(stderr,
-	       "%d:%s:%d:%s %s",
-	       level,
-	       tag,
-	       pid,
-	       origins[origin & 3],
-	       msg.buf);
-        syslog_async(rtapi2syslog(level),
-	       "%d:%s:%d:%s %s",
-	       level,
-	       tag,
-	       pid,
-	       origins[origin & 3],
-	       msg.buf);
-    }
+    // use copying writer to shorten criticial section
+    record_write(&rtapi_message_buffer, (void *) &msg,
+                 sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
+    if (rtapi_message_buffer.header->use_wmutex)
+        rtapi_mutex_give(&rtapi_message_buffer.header->wmutex);
     return n;
 }
 
-void default_rtapi_msg_handler(msg_level_t level, const char *fmt,
+static char *msg_level_to_str[6] = {
+  "NONE",
+  "ERROR",
+  "WARNING",
+  "INFO",
+  "DEBUG",
+  "ALL",
+};
+
+int rtapi_message_buffer_ready(void)
+{
+  return (rtapi_message_buffer.header != NULL);
+}
+
+int default_rtapi_msg_handler(msg_level_t level, const char *fmt,
 			       va_list ap)
+{
+    static pid_t rtapi_pid;
+    char buf[RTAPI_LINELEN], *cp;
+    if (rtapi_pid == 0)
+	rtapi_pid = getpid();
+    int n = vsnprintf(buf, RTAPI_LINELEN, fmt, ap);
+    while ((cp = strrchr(buf,'\n')))
+        *cp = '\0';
+    fprintf(stderr, "%s/stderr:%s:%d:%s %s\n", msg_level_to_str[level], logtag, rtapi_pid,
+            MSG_ORIGIN==MSG_RTUSER? "RTAPI" : "ULAPI", buf);
+    return n;
+}
+
+int ring_rtapi_msg_handler(msg_level_t level, const char *fmt,
+                            va_list ap)
 {
     static pid_t rtapi_pid;
     if (rtapi_pid == 0)
 	rtapi_pid = getpid();
-    vs_ringlogfv(level, rtapi_pid, MSG_ORIGIN, logtag, fmt, ap);
+    return vs_ringlogfv(level, rtapi_pid, MSG_ORIGIN, logtag, fmt, ap);
 }
 
 static rtapi_msg_handler_t rtapi_msg_handler = default_rtapi_msg_handler;
@@ -229,13 +228,9 @@ void rtapi_print(const char *fmt, ...) {
 
 void rtapi_print_msg(int level, const char *fmt, ...) {
     va_list args;
-
-    if ((level <= rtapi_get_msg_level()) &&
-	(rtapi_get_msg_level() != RTAPI_MSG_NONE)) {
-	va_start(args, fmt);
-	rtapi_msg_handler(level, fmt, args);
-	va_end(args);
-    }
+    va_start(args, fmt);
+    rtapi_msg_handler(level, fmt, args);
+    va_end(args);
 }
 #define RTAPIPRINTBUFFERLEN 256
 static char _rtapi_logmsg[RTAPIPRINTBUFFERLEN];

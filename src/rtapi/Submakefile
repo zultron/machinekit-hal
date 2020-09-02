@@ -67,7 +67,6 @@ XXAPI_COMMON_SRCS := $(patsubst %, rtapi/%, \
 
 ULAPI_SRCS := \
 	rtapi/flavor/ulapi.c \
-	machinetalk/lib/syslog_async.c \
 	rtapi/rtapi_hexdump.c \
 	$(XXAPI_COMMON_SRCS)
 
@@ -318,7 +317,7 @@ TARGETS += ../etc/machinekit/rtapi.ini
 
 # ULAPI: use -DULAPI XXAPI_COMMON_SRCS
 $(eval $(call setup_test,rtapi/tests/rtapi_flavor, ULAPI,\
-  $(XXAPI_COMMON_SRCS) machinetalk/lib/syslog_async.c rtapi/flavor/ulapi.c,\
+  $(XXAPI_COMMON_SRCS).c rtapi/flavor/ulapi.c,\
   , \
   ../lib/liblinuxcncshm.so ../lib/libmkini.so, \
   , \
@@ -326,7 +325,7 @@ $(eval $(call setup_test,rtapi/tests/rtapi_flavor, ULAPI,\
 
 # RTAPI: use -DRTAPI XXAPI_COMMON_SRCS; link in pthreads and libcgroup
 $(eval $(call setup_test,rtapi/tests/rtapi_flavor, RTAPI,\
-  machinetalk/lib/syslog_async.c rtapi/flavor/ulapi.c, \
+  rtapi/flavor/ulapi.c, \
   $(XXAPI_COMMON_SRCS) rtapi/flavor/rt-preempt.c $(XENOMAI_SRC), \
   ../lib/liblinuxcncshm.so ../lib/libmkini.so, \
   -pthread $(LIBCGROUP_LIBS), \

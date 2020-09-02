@@ -12,13 +12,9 @@
 
 #include "config.h"
 #include "ll-zeroconf.hh"
-#include "syslog_async.h"
 
 int main(AVAHI_GCC_UNUSED int argc, char*argv[])
 {
-    openlog_async(argv[0], LOG_NDELAY|LOG_ERR, LOG_LOCAL1);
-    setlogmask_async(LOG_UPTO(LOG_DEBUG));
-
     if (argc < 2) {
 	fprintf(stderr, "usage: zres subtype [uuid=<uuid>]\n");
 	exit(1);

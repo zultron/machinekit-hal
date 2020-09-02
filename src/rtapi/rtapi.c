@@ -210,6 +210,8 @@ int rtapi_module_init()
     ringbuffer_init(shm_ptr(global_data, global_data->rtapi_messages_ptr),
 		    &rtapi_message_buffer);
     rtapi_message_buffer.header->refcount++; // rtapi is 'attached'
+    rtapi_set_msg_handler(ring_rtapi_msg_handler);
+    rtapi_print_msg(RTAPI_MSG_INFO, "Initialized message ring\n");
 
     // flavor
     init_rtapi_data(rtapi_data);

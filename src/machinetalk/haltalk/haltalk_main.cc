@@ -122,18 +122,16 @@ static void btprint(const char *prefix, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vsyslog_async(LOG_ERR, fmt, args);
+    rtapi_get_msg_handler()(RTAPI_MSG_ERR, fmt, args);
 }
 
 static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 {
-    syslog_async(LOG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
+    rtapi_print_msg(RTAPI_MSG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
 		    sig, strsignal(sig), get_current_dir_name());
 
     backtrace("", "haltalk", btprint, 3);
 
-    closelog_async(); // let syslog_async drain
-    sleep(1);
     // reset handler for current signal to default
     signal(sig, SIG_DFL);
     // and re-raise so we get a proper core dump and stacktrace
@@ -295,7 +293,7 @@ read_config(htself_t *self)
     FILE *inifp = NULL;
 
     if (self->cfg->inifile && ((inifp = fopen(self->cfg->inifile,"r")) == NULL)) {
-	syslog_async(LOG_ERR, "%s: cant open inifile '%s'\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
 		     self->cfg->progname, self->cfg->inifile);
     }
 
@@ -346,7 +344,7 @@ usage(void)
 	   "    Turn on event debugging messages.\n");
 }
 
-static const char *option_string = "hI:S:d:t:T:R:sK:G";
+static const char *option_string = "hI:S:d:t:T:R:K:G";
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"ini", required_argument, 0, 'I'},     // default: getenv(INI_FILE_NAME)
@@ -356,7 +354,6 @@ static struct option long_options[] = {
     {"ctimer", required_argument, 0, 'T'},
     {"keepalive", required_argument, 0, 'K'},
     {"svcuuid", required_argument, 0, 'R'},
-    {"stderr",  no_argument,        0, 's'},
     {"nosighdlr",   no_argument,    0, 'G'},
     {0,0,0,0}
 };
@@ -367,7 +364,6 @@ int main (int argc, char *argv[])
 
     conf.progname = argv[0];
     conf.inifile = getenv("INI_FILE_NAME");
-    int logopt = LOG_NDELAY;
 
     htself_t self = {0};
     self.cfg = &conf;
@@ -415,16 +411,12 @@ int main (int argc, char *argv[])
 	case 'G':
 	    conf.trap_signals = false;
 	    break;
-	case 's':
-	    logopt |= LOG_PERROR;
-	    break;
 	case 'h':
 	default:
 	    usage();
 	    exit(0);
 	}
     }
-    openlog_async(conf.progname, logopt , SYSLOG_FACILITY);
     backtrace_init(argv[0]);
 
     // ease debugging with gdb - disable all signal handling

@@ -40,7 +40,7 @@ handle_signal(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     }
     switch (fdsi.ssi_signo) {
     default:
-	syslog_async(LOG_ERR, "%s: signal %d - '%s' received\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: signal %d - '%s' received\n",
 		     self->cfg->progname,
 		     fdsi.ssi_signo,
 		     strsignal(fdsi.ssi_signo));
@@ -82,7 +82,7 @@ mainloop( wtself_t *self)
     if (mk_announce(&self->netopts, &self->mksock,
 		    "Machinekit", self->cfg->index_html))
 	return -1;
-    syslog_async(LOG_DEBUG, "%s: talking Machinekit %s on '%s'",
+    rtapi_print_msg(RTAPI_MSG_DBG, "%s: talking Machinekit %s on '%s'",
 		 self->cfg->progname, self->mksock.tag,
 		 self->mksock.announced_uri);
 
@@ -98,7 +98,7 @@ mainloop( wtself_t *self)
 #else
     libwebsocket_context_destroy(self->wsctx);
 #endif
-    syslog_async(LOG_INFO,
+    rtapi_print_msg(RTAPI_MSG_INFO,
 		 "%s: exiting mainloop (%s)\n",
 		 self->cfg->progname,
 		 self->interrupted ? "interrupted": "reactor exited");
@@ -108,10 +108,8 @@ mainloop( wtself_t *self)
 
 static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 {
-    syslog_async(LOG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
+    rtapi_print_msg(RTAPI_MSG_ERR,"signal %d - '%s' received, dumping core (current dir=%s)",
 		 sig, strsignal(sig), get_current_dir_name());
-    closelog_async(); // let syslog_async drain
-    sleep(1);
     // reset handler for current signal to default
     signal(sig, SIG_DFL);
     // and re-raise so we get a proper core dump and stacktrace
@@ -167,7 +165,7 @@ wt_hello(wtconf_t *cfg)
 {
     int major, minor, patch;
     zmq_version (&major, &minor, &patch);
-    syslog_async(LOG_DEBUG,
+    rtapi_print_msg(RTAPI_MSG_DBG,
 		 "%s: startup ØMQ=%d.%d.%d czmq=%d.%d.%d protobuf=%d.%d.%d libwebsockets='%s'\n",
 		 cfg->progname, major, minor, patch,
 		 CZMQ_VERSION_MAJOR, CZMQ_VERSION_MINOR,CZMQ_VERSION_PATCH,
@@ -186,7 +184,7 @@ read_config(wtconf_t *conf)
 
     if (conf->inifile) {
 	if ((inifp = fopen(conf->inifile,"r")) == NULL) {
-	    syslog_async(LOG_ERR, "%s: cant open inifile '%s'\n",
+	    rtapi_print_msg(RTAPI_MSG_ERR, "%s: cant open inifile '%s'\n",
 			 conf->progname, conf->inifile);
 	    return -1;
 	}
@@ -276,8 +274,6 @@ usage(void)
 	   "    to to SSL cert\n"
 	   "-K or --keypath <path>\n"
 	   "    to to SSL key\n"
-	   "-s or --stderr\n"
-	   "    log to stderr besides syslog\n"
 	   "-F or --foreground\n"
 	   "    stay in foreground - dont fork\n"
 	   "-d or --debug <mask>\n"
@@ -285,7 +281,7 @@ usage(void)
 }
 
 
-static const char *option_string = "hI:S:d:R:Fsw:X:p:C:K:P:";
+static const char *option_string = "hI:S:d:R:Fw:X:p:C:K:P:";
 static struct option long_options[] = {
     { "help", no_argument, 0, 'h'},
     { "ini", required_argument, 0, 'I'},
@@ -298,7 +294,6 @@ static struct option long_options[] = {
     { "wwwdir", required_argument, 0, 'w'},
     { "certpath", required_argument, 0, 'C'},
     { "keypath", required_argument, 0, 'K'},
-    { "stderr",  no_argument,        0, 's'},
     { "foreground",  no_argument,    0, 'F'},
     { "plugin", required_argument, 0, 'P'},
     {0,0,0,0}
@@ -320,7 +315,6 @@ int main (int argc, char *argv[])
     self.cfg = &conf;
     self.pid = getpid();
 
-    int logopt = LOG_NDELAY;
     int opt, retval;
     zlist_t *plugins = zlist_new(); // list of .so pathnames
 
@@ -336,17 +330,11 @@ int main (int argc, char *argv[])
 	case 'F':
 	    conf.foreground = true;
 	    break;
-	case 's':
-	    conf.log_stderr = true;
-	    logopt |= LOG_PERROR;
-	    break;
 	break;
 	default:
 	    ;
 	}
     }
-
-    openlog_async(conf.progname, logopt , SYSLOG_FACILITY);
 
     // generic binding & announcement parameters
     // from $MACHINEKIT_INI
@@ -480,7 +468,7 @@ static const char * const wt_log_level_names[] = {
 
 static void lwsl_emit_wtlog(int filter, const char *line)
 {
-    int syslog_level = LOG_DEBUG;
+    int msg_level = RTAPI_MSG_DBG;
     int n;
     char buf[300];
     struct timeval tv_now, tv_delta;
@@ -488,11 +476,11 @@ static void lwsl_emit_wtlog(int filter, const char *line)
     gettimeofday(&tv_now, NULL);
     timersub(&tv_now,&tv_start, &tv_delta);
 
-    if (filter & LLL_DEBUG)  syslog_level = LOG_DEBUG;
-    if (filter & LLL_INFO)   syslog_level = LOG_INFO;
-    if (filter & LLL_NOTICE) syslog_level = LOG_NOTICE;
-    if (filter & LLL_WARN)   syslog_level = LOG_WARNING;
-    if (filter & LLL_ERR)    syslog_level = LOG_ERR;
+    if (filter & LLL_DEBUG)  msg_level = RTAPI_MSG_DBG;
+    if (filter & LLL_INFO)   msg_level = RTAPI_MSG_INFO;
+    if (filter & LLL_NOTICE) msg_level = RTAPI_MSG_WARN;
+    if (filter & LLL_WARN)   msg_level = RTAPI_MSG_WARN;
+    if (filter & LLL_ERR)    msg_level = RTAPI_MSG_ERR;
     buf[0] = '\0';
     for (n = 0; n < LLL_LAST; n++)
 	if (filter == (1 << n)) {
@@ -501,7 +489,7 @@ static void lwsl_emit_wtlog(int filter, const char *line)
 		     wt_log_level_names[n]);
 	    break;
 	}
-    syslog_async(syslog_level, "%s%s", buf, line);
+    rtapi_print_msg(msg_level, "%s%s", buf, line);
 }
 
 static int lwsl_logopts(char *logopts)
@@ -528,7 +516,7 @@ static int lwsl_logopts(char *logopts)
 		goto next;
 	    }
 	}
-	syslog_async(LOG_ERR, "inifile item LOG: no such keyword '%s'", token);
+	rtapi_print_msg(RTAPI_MSG_ERR, "inifile item LOG: no such keyword '%s'", token);
     next:
 	s = NULL;
     }

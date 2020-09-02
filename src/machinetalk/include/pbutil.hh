@@ -34,7 +34,6 @@ int send_pbcontainer(zmsg_t *dest, machinetalk::Container &c, void *socket);
 
 // add an printf-formatted string to the 'note' repeated string in a
 // Container
-// also log to syslog
 // the a string longer than MAX_NOTESIZE-4 will be truncated to
 // MAX_NOTESIZE-4 and the string "..." appended, indicating truncation
 #define MAX_NOTESIZE 4096

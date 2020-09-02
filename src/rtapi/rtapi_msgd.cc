@@ -44,7 +44,6 @@
 #include <getopt.h>
 #include <errno.h>
 #include <assert.h>
-#include <syslog_async.h>
 #include <uuid/uuid.h>
 #include <string>
 #include <vector>
@@ -85,9 +84,6 @@ using namespace google::protobuf;
 #define HAL_STACKSIZE 262144
 
 
-#ifndef SYSLOG_FACILITY
-#define SYSLOG_FACILITY LOG_LOCAL1  // where all rtapi/ulapi logging goes
-#endif
 #define GRACE_PERIOD 2000 // ms to wait after rtapi_app exit detected
 
 #define STRINGIFY(x) #x
@@ -318,10 +314,10 @@ static void check_memlock_limit(const char *where)
     if(result < 0) { perror("getrlimit"); return; }
     if(lim.rlim_cur == (rlim_t)-1) return; // unlimited
     if(lim.rlim_cur >= RLIMIT_MEMLOCK_RECOMMENDED) return; // limit is at least recommended
-    syslog_async(LOG_ERR, "Locked memory limit is %luKiB, recommended at least %luKiB.",
+    rtapi_print_msg(RTAPI_MSG_ERR, "Locked memory limit is %luKiB, recommended at least %luKiB.",
 		 (unsigned long)lim.rlim_cur/1024, RLIMIT_MEMLOCK_RECOMMENDED/1024);
-    syslog_async(LOG_ERR, "This can cause the error '%s'.", where);
-    syslog_async(LOG_ERR, "For more information, see "
+    rtapi_print_msg(RTAPI_MSG_ERR, "This can cause the error '%s'.", where);
+    rtapi_print_msg(RTAPI_MSG_ERR, "For more information, see "
 		 "http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?LockedMemory\n");
 }
 
@@ -347,7 +343,7 @@ static int init_global_data(global_data_t * data,
     // lock the global data segment
     if (mlock(data, sizeof(global_data_t))) {
         const char *errmsg = strerror(errno);
-        syslog_async(LOG_ERR, "mlock(global) failed: %d '%s'\n",
+        rtapi_print_msg(RTAPI_MSG_ERR, "mlock(global) failed: %d '%s'\n",
                      errno, errmsg);
         check_memlock_limit(errmsg);
     }
@@ -379,7 +375,7 @@ static int init_global_data(global_data_t * data,
     // in binary form
     if (uuid_parse(service_uuid, data->service_uuid)) {
 	// syntax error in UUID
-	syslog_async(LOG_ERR,"%s %s: syntax error in UUID '%s'",
+	rtapi_print_msg(RTAPI_MSG_ERR,"%s %s: syntax error in UUID '%s'",
 		     progname, __func__, service_uuid);
 	retval--;
     }
@@ -432,7 +428,7 @@ static void start_shutdown(int signal)
     // no point in keeping rtapi_app running if msgd exits
     if (global_data->rtapi_app_pid > 0) {
 	kill(global_data->rtapi_app_pid, SIGTERM);
-	syslog_async(LOG_ERR, "msgd:%d: got signal %d - sending SIGTERM to rtapi (pid %d)\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "msgd:%d: got signal %d - sending SIGTERM to rtapi (pid %d)\n",
 		     rtapi_instance, signal, global_data->rtapi_app_pid);
     }
 }
@@ -441,7 +437,7 @@ static void btprint(const char *prefix, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vsyslog_async(LOG_ERR, fmt, args);
+    rtapi_get_msg_handler()(RTAPI_MSG_ERR, fmt, args);
     va_end(args);
 }
 
@@ -451,14 +447,12 @@ static void btprint(const char *prefix, const char *fmt, ...)
 static void sigaction_handler(int sig, siginfo_t *si, void *uctx)
 {
     start_shutdown(sig);
-    syslog_async(LOG_ERR,
+    rtapi_print_msg(RTAPI_MSG_ERR,
 		 "msgd:%d: signal %d - '%s' received, dumping core (current dir=%s)",
 		 rtapi_instance, sig, strsignal(sig), get_current_dir_name());
 
     backtrace("", "msgd", btprint, 3);
 
-    closelog_async(); // let syslog_async drain
-    sleep(1);
     // reset handler for current signal to default
     signal(sig, SIG_DFL);
     // and re-raise so we get a proper core dump and stacktrace
@@ -482,7 +476,7 @@ static int s_handle_signal(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
     case SIGINT:
     case SIGQUIT:
     case SIGKILL:
-	syslog_async(LOG_INFO, "msgd:%d: %s - shutting down\n",
+	rtapi_print_msg(RTAPI_MSG_INFO, "msgd:%d: %s - shutting down\n",
 	       rtapi_instance, strsignal(fdsi.ssi_signo));
 
 	// hint if error ring couldnt be served fast enough,
@@ -490,7 +484,7 @@ static int s_handle_signal(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 	// none observed so far - this might be interesting to hear about
 	if (global_data && (global_data->error_ring_full ||
 			    global_data->error_ring_locked))
-	    syslog_async(LOG_INFO, "msgd:%d: message ring stats: full=%d locked=%d ",
+	    rtapi_print_msg(RTAPI_MSG_INFO, "msgd:%d: message ring stats: full=%d locked=%d ",
 		   rtapi_instance,
 		   global_data->error_ring_full,
 		   global_data->error_ring_locked);
@@ -499,7 +493,7 @@ static int s_handle_signal(zloop_t *loop, zmq_pollitem_t *poller, void *arg)
 
     default:
 	// this should be handled either above or in sigaction_handler
-	syslog_async(LOG_ERR, "msgd:%d:  BUG: unhandled signal %d - '%s' received\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "msgd:%d:  BUG: unhandled signal %d - '%s' received\n",
 		     rtapi_instance,	fdsi.ssi_signo, strsignal(fdsi.ssi_signo));
 	break;
     }
@@ -511,16 +505,18 @@ cleanup_actions(void)
 {
     int retval;
     size_t max_ringmem = max_bytes + max_msgs * 8; // includes record overhead
-    syslog_async(LOG_DEBUG,"log buffer hwm: %zu% (%zu msgs, %zu bytes out of %d)",
+    rtapi_print_msg(RTAPI_MSG_DBG,"log buffer hwm: %zu (%zu msgs, %zu bytes out of %d)",
 		 (max_ringmem*100)/MESSAGE_RING_SIZE,
 		 max_msgs, max_ringmem, MESSAGE_RING_SIZE);
 
     if (global_data) {
 	if (global_data->rtapi_app_pid > 0) {
 	    kill(global_data->rtapi_app_pid, SIGTERM);
-	    syslog_async(LOG_INFO,"sent SIGTERM to rtapi (pid %d)\n",
+	    rtapi_print_msg(RTAPI_MSG_INFO,"sent SIGTERM to rtapi (pid %d)\n",
 		   global_data->rtapi_app_pid);
 	}
+        // Redirect to stderr before stopping message ring buffer
+        rtapi_set_msg_handler(default_rtapi_msg_handler);
 	// in case some process catches a leftover shm segment
 	global_data->magic = GLOBAL_EXITED;
 	global_data->rtapi_msgd_pid = 0;
@@ -528,11 +524,11 @@ cleanup_actions(void)
 	    rtapi_msg_buffer.header->refcount--;
 	retval = shm_common_detach(sizeof(global_data_t), global_data);
 	if (retval < 0) {
-	    syslog_async(LOG_ERR,"shm_common_detach(global) failed: %s\n",
+	    rtapi_print_msg(RTAPI_MSG_ERR,"shm_common_detach(global) failed: %s\n",
 		   strerror(-retval));
 	} else {
 	    shm_common_unlink(OS_KEY(GLOBAL_KEY, rtapi_instance));
-	    syslog_async(LOG_DEBUG,"normal shutdown - global segment detached");
+	    rtapi_print_msg(RTAPI_MSG_DBG,"normal shutdown - global segment detached");
 	}
 	global_data = NULL;
     }
@@ -543,7 +539,7 @@ static int logpub_readable_cb(zloop_t *loop, zsock_t *socket, void *arg)
 {
     zframe_t *f = zframe_recv(socket);
     const char *s = (const char *) zframe_data(f);
-    syslog_async(LOG_ERR, "%s subscribe on '%s'",
+    rtapi_print_msg(RTAPI_MSG_ERR, "%s subscribe on '%s'",
 		 *s ? "start" : "stop", s+1);
     zframe_destroy(&f);
     return 0;
@@ -552,7 +548,7 @@ static int logpub_readable_cb(zloop_t *loop, zsock_t *socket, void *arg)
 static int
 s_start_shutdown_cb(zloop_t *loop, int  timer_id, void *args)
 {
-    syslog_async(LOG_ERR, "msgd shutting down");
+    rtapi_print_msg(RTAPI_MSG_ERR, "msgd shutting down");
     return -1; // exit reactor
 }
 
@@ -569,13 +565,15 @@ message_poll_cb(zloop_t *loop, int  timer_id, void *args)
     int current_interval = msg_poll;
 
     if (global_data->error_ring_full > full) {
-	syslog_async(LOG_ERR, "msgd:%d: message ring overrun (full): %d messages lost",
-		     global_data->error_ring_full - full);
+	rtapi_print_msg(RTAPI_MSG_ERR,
+                        "msgd:%d: message ring overrun (full): %d messages lost",
+                        rtapi_instance, global_data->error_ring_full - full);
 	full = global_data->error_ring_full;
     }
     if (global_data->error_ring_locked > locked) {
-	syslog_async(LOG_ERR, "msgd:%d: message ring overrun (locked): %d messages lost",
-		     global_data->error_ring_locked - locked);
+	rtapi_print_msg(RTAPI_MSG_ERR,
+                        "msgd:%d: message ring overrun (locked): %d messages lost",
+                        rtapi_instance, global_data->error_ring_locked - locked);
 	locked = global_data->error_ring_locked;
     }
 
@@ -591,10 +589,9 @@ message_poll_cb(zloop_t *loop, int  timer_id, void *args)
 	// strip trailing newlines
 	while ((cp = strrchr(msg->buf,'\n')))
 	    *cp = '\0';
-	syslog_async(rtapi2syslog(msg->level), "%s:%d:%s %.*s",
-		     msg->tag, msg->pid, origins[msg->origin],
-		     (int) payload_length, msg->buf);
-
+	rtapi_print_msg(msg->level, "%s:%d:%s %.*s",
+                        msg->tag, msg->pid, origins[msg->origin],
+                        (int) payload_length, msg->buf);
 
 	if (logpub.socket) {
 	    // publish protobuf-encoded log message
@@ -618,16 +615,16 @@ message_poll_cb(zloop_t *loop, int  timer_id, void *args)
 	    if (container.SerializeWithCachedSizesToArray(zframe_data(z_pbframe))) {
 		// channel name:
 		if (zstr_sendm(logpub.socket, "log"))
-		    syslog_async(LOG_ERR,"zstr_sendm(): %s", strerror(errno));
+		    rtapi_print_msg(RTAPI_MSG_ERR,"zstr_sendm(): %s", strerror(errno));
 
 		// and the actual pb2-encoded message
 		// zframe_send() deallocates the frame after sending,
 		// and frees pb_buffer through zfree_cb()
 		if (zframe_send(&z_pbframe, logpub.socket, 0))
-		    syslog_async(LOG_ERR,"zframe_send(): %s", strerror(errno));
+		    rtapi_print_msg(RTAPI_MSG_ERR,"zframe_send(): %s", strerror(errno));
 
 	    } else {
-		syslog_async(LOG_ERR, "container serialization failed");
+		rtapi_print_msg(RTAPI_MSG_ERR, "container serialization failed");
 	    }
 	}
 	record_shift(&rtapi_msg_buffer);
@@ -654,7 +651,7 @@ message_poll_cb(zloop_t *loop, int  timer_id, void *args)
 	(shutdowntimer_id ==  0)) {
 	// schedule a loop shutdown but keep reading messages for a while
 	// so we dont loose messages
-	syslog_async(LOG_ERR, "rtapi_app exit detected - scheduled shutdown");
+	rtapi_print_msg(RTAPI_MSG_ERR, "rtapi_app exit detected - scheduled shutdown");
 	shutdowntimer_id = zloop_timer (loop, GRACE_PERIOD, 1,
 					s_start_shutdown_cb, NULL);
     }
@@ -685,8 +682,9 @@ static struct option long_options[] = {
 int main(int argc, char **argv)
 {
     int c, i, retval;
-    int option = LOG_NDELAY;
     pid_t pid, sid;
+
+    rtapi_set_logtag("rtapi_msgd");
 
     inifile = getenv("MACHINEKIT_INI");
 
@@ -704,7 +702,7 @@ int main(int argc, char **argv)
 	    char *cp;
 	    halsize = strtol(param, &cp, 0);
 	    if ((*cp != '\0') && (!isspace(*cp))) {
-		fprintf(stderr, "rtapi.ini: string '%s' invalid for HAL_SIZE\n",
+		rtapi_print_msg(RTAPI_MSG_ERR, "rtapi.ini: string '%s' invalid for HAL_SIZE\n",
 			param);
 		exit(1);
 	    }
@@ -757,9 +755,6 @@ int main(int argc, char **argv)
 	    hal_heap_flags |= (RTAPIHEAP_TRACE_MALLOC|RTAPIHEAP_TRACE_FREE);
 	    global_heap_flags |= (RTAPIHEAP_TRACE_MALLOC|RTAPIHEAP_TRACE_FREE);
 	    break;
-	case 's':
-	    option |= LOG_PERROR;
-	    break;
 	case 'R':
 	    netopts.service_uuid = strdup(optarg);
 	    break;
@@ -787,18 +782,18 @@ int main(int argc, char **argv)
 
     // sanity
     if (getuid() == 0) {
-	fprintf(stderr, "%s: FATAL - will not run as root\n", progname);
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: FATAL - will not run as root\n", progname);
 	exit(EXIT_FAILURE);
     }
     if (geteuid() == 0) {
-	fprintf(stderr, "%s: FATAL - will not run as setuid root\n", progname);
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: FATAL - will not run as setuid root\n", progname);
 	exit(EXIT_FAILURE);
     }
 
     // the global segment every entity in HAL/RTAPI land attaches to
     if ((global_data = create_global_segment(global_segment_size)) == NULL) {
 	// must be a new shm segment
-	fprintf(stderr, "%s: failed to create global segment\n", progname);
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: failed to create global segment\n", progname);
 	exit(1);
     }
 
@@ -817,6 +812,7 @@ int main(int argc, char **argv)
 	    exit(EXIT_FAILURE);
         }
     }
+    rtapi_print_msg(RTAPI_MSG_INFO, "Forked PID %d\n", getpid());
 
 
     // set new process name and clean out cl args
@@ -826,11 +822,6 @@ int main(int argc, char **argv)
 	memset(argv[i], '\0', strlen(argv[i]));
 
     backtrace_init(argv[0]);
-
-    openlog_async(argv[0], option , SYSLOG_FACILITY);
-    setlogmask_async(LOG_UPTO(debug + 2));
-    // max out async syslog buffers for slow system in debug mode
-    tunelog_async(99,10);
 
     // suppress default handling of signals in zsock_new()
     // since we're using signalfd()
@@ -865,11 +856,11 @@ int main(int argc, char **argv)
 			 global_heap_flags,
 			 hal_heap_flags)) {
 
-	syslog_async(LOG_ERR, "%s: startup failed, exiting\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: startup failed, exiting\n",
 		     progname);
 	exit(EXIT_FAILURE);
     } else {
-	syslog_async(LOG_INFO,
+	rtapi_print_msg(RTAPI_MSG_INFO,
 		     "startup pid=%d "
 		     "rtlevel=%d usrlevel=%d halsize=%d cc=%s %s  version=%s",
 		     getpid(),
@@ -886,7 +877,7 @@ int main(int argc, char **argv)
     }
     int major, minor, patch;
     zmq_version (&major, &minor, &patch);
-    syslog_async(LOG_DEBUG,
+    rtapi_print_msg(RTAPI_MSG_DBG,
 		 "ØMQ=%d.%d.%d czmq=%d.%d.%d protobuf=%d.%d.%d atomics=%s %s %s "
 		 " libwebsockets=%s %s\n",
 		 major, minor, patch,
@@ -915,15 +906,15 @@ int main(int argc, char **argv)
 		 ""
 #endif
 		 );
-    syslog_async(LOG_INFO,"configured: sha=%s", GIT_CONFIG_SHA);
-    syslog_async(LOG_INFO,"built:      %s %s sha=%s",  __DATE__, __TIME__, GIT_BUILD_SHA);
+    rtapi_print_msg(RTAPI_MSG_INFO,"configured: sha=%s", GIT_CONFIG_SHA);
+    rtapi_print_msg(RTAPI_MSG_INFO,"built:      %s %s sha=%s",  __DATE__, __TIME__, GIT_BUILD_SHA);
     if (strcmp(GIT_CONFIG_SHA,GIT_BUILD_SHA))
-	syslog_async(LOG_WARNING, "WARNING: git SHA's for configure and build do not match!");
+	rtapi_print_msg(RTAPI_MSG_WARN, "WARNING: git SHA's for configure and build do not match!");
 
 
    if ((global_data->rtapi_msgd_pid != 0) &&
 	kill(global_data->rtapi_msgd_pid, 0) == 0) {
-	syslog_async(LOG_ERR, "%s: another rtapi_msgd is already running (pid %d), exiting\n",
+	rtapi_print_msg(RTAPI_MSG_ERR, "%s: another rtapi_msgd is already running (pid %d), exiting\n",
 	       progname, global_data->rtapi_msgd_pid);
 	exit(EXIT_FAILURE);
     }

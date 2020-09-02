@@ -15,7 +15,8 @@ PB2CXX_PROTOLIB = ../lib/libmachinetalk-pb2++.so
 $(call TOOBJSDEPS, $(ENCDEC_SRCS)) : EXTRAFLAGS += $(ENCDEC_CXX_CFLAGS)
 
 ../bin/encdec: $(call TOOBJS, $(ENCDEC_SRCS)) \
-	$(PB2CXX_PROTOLIB)  ../lib/libmtalk.so ../lib/libmachinetalk-pb2++.so ../lib/libmkini.so
+	$(PB2CXX_PROTOLIB)  ../lib/libmtalk.so ../lib/libmachinetalk-pb2++.so \
+		../lib/libmkini.so ../lib/libhalulapi.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^  \
 	 $(ENCDEC_CXX_LDFLAGS)
@@ -31,7 +32,8 @@ PB2CXX_PROTOLIB = ../lib/libmachinetalk-pb2++.so
 $(call TOOBJSDEPS, $(POSITION_SRCS)) : EXTRAFLAGS += $(POSITION_CXX_CFLAGS)
 
 ../bin/position: $(call TOOBJS, $(POSITION_SRCS)) \
-	 ../lib/libmtalk.so $(PB2CXX_PROTOLIB)  ../lib/libmkini.so
+	 	../lib/libmtalk.so $(PB2CXX_PROTOLIB)  ../lib/libmkini.so \
+		../lib/libhalulapi.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^  \
 	 $(POSITION_CXX_LDFLAGS)
@@ -161,7 +163,7 @@ LINMOVE_CXX_LDFLAGS=  $(CXX_PROTOLIB) $(PROTOBUF_LIBS)  $(JANSSON_LIBS) \
 $(call TOOBJSDEPS, $(LINMOVE_SRCS)) : EXTRAFLAGS += $(LINMOVE_CXX_CFLAGS)
 
 ../bin/linmove: $(call TOOBJS, $(LINMOVE_SRCS)) \
-	../lib/libmtalk.so ../lib/libmachinetalk-pb2++.so
+	../lib/libmtalk.so ../lib/libmachinetalk-pb2++.so  ../lib/libhalulapi.so
 	$(ECHO) Linking $(notdir $@)
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^  \
 	 $(LINMOVE_CXX_LDFLAGS) $(PBJSONLIB)
