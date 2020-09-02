@@ -30,7 +30,7 @@ VERBOSE=0
 clean () {
     find $* \( -name "stderr" -or -name "result" \
 	-or -name "*.var" -or -name "*.var.bak" \) \
-	-print0 | xargs -0 rm -f
+	-delete
 }
 
 run_and_log() {
@@ -40,8 +40,8 @@ run_and_log() {
     #
     # http://mywiki.wooledge.org/BashFAQ/106
 
-    errpipe=pipe-stderr-$$
-    outpipe=pipe-stdout-$$
+    errpipe=$TMPDIR/pipe-stderr-$$
+    outpipe=$TMPDIR/pipe-stdout-$$
 
     # create two named pipes (and ensure they're cleaned up)
     mkfifo $errpipe $outpipe
@@ -83,9 +83,9 @@ run_test () {
     export MK_MODULE_DIR="$(pwd)"
     exitcode=0
     if [ $VERBOSE -eq 1 ]; then
-	$RUNTESTS -l $INTERP $testname || exitcode=$?
+	$RUNTESTS -l $TMPDIR $INTERP $testname || exitcode=$?
     else
-	$RUNTESTS -l $INTERP $testname >&/dev/null || exitcode=$?
+	$RUNTESTS -l $TMPDIR $INTERP $testname >&/dev/null || exitcode=$?
     fi
     popd > /dev/null
     return $exitcode
@@ -183,6 +183,7 @@ run_tests () {
 		    rm -f $testdir/stderr $testdir/result \
 			$testdir/*.var $testdir/*.var.bak
 		fi
+		cleanup_tmpdir
 	    fi
 	fi
     done
@@ -226,20 +227,27 @@ EOF
 # Special case:  we called ourself to log a run
 if test "$1" = "-l"; then
     shift
+    TMPDIR="$1"
+    shift
     run_and_log "$@"
     exit $?
 fi
 
 
+cleanup_tmpdir() {
+    rm -rf $TMPDIR/*
+}
+
 cleanup_and_exit() {
+    rm -rf $TMPDIR
     # Remove signal handler and exit
     trap - ${EXIT_HANDLER_SIGNALS} EXIT
-    rm -rf $TMPDIR $testdir/pipe-std{out,err}-* $errpipe $outpipe
     exit $1
 }
 
 exit_handler() {
     test -z "$*" || echo "$*" >&2
+    cleanup_tmpdir # Clean up after last executing test
     cleanup_and_exit 1
 }
 
