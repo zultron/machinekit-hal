@@ -31,7 +31,7 @@ ls ${LOG}.* >&/dev/null && rm -f ${LOG}.*
 TEST_PATTERN=0
 while [ ! -z "${Error[$TEST_PATTERN]}" ]; do
 
-    MSGD_OPTS="--stderr" RTAPI_APP_OPTS="-s" DEBUG=5 realtime start  >$LOG 2>&1
+    DEBUG=5 realtime start  >$LOG 2>&1
 
     halcmd loadrt hostmot2 >/dev/null 2>&1
     halcmd loadrt hm2_test test_pattern=$TEST_PATTERN >/dev/null 2>&1
