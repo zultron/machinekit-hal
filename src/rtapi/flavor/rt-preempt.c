@@ -553,12 +553,10 @@ int posix_wait_hook(const int flags) {
 
 	FTS(ts)->wait_errors++;
 
-        if (!(flavor_descriptor->flags && FLAVOR_IS_RT)) {
+        if ((flavor_descriptor->flags & FLAVOR_IS_RT) && rt_exception_handler) {
             rtapi_exception_detail_t detail = {0};
             detail.task_id = task_id(task);
-
-            if (rt_exception_handler)
-                rt_exception_handler(RTP_DEADLINE_MISSED, &detail, ts);
+            rt_exception_handler(RTP_DEADLINE_MISSED, &detail, ts);
         }
     }
     return 0;
@@ -666,9 +664,9 @@ void rtpreempt_print_thread_stats(int task_id)
 }
 
 
-void rtpreempt_exception_handler_hook(int type,
-                                      rtapi_exception_detail_t *detail,
-                                      int level)
+void posix_exception_handler_hook(int type,
+                                  rtapi_exception_detail_t *detail,
+                                  int level)
 {
     rtapi_threadstatus_t *ts = &global_data->thread_status[detail->task_id];
     switch ((rtpreempt_exception_id_t)type) {
@@ -693,7 +691,7 @@ flavor_descriptor_t flavor_rt_prempt_descriptor = {
     .flavor_id = RTAPI_FLAVOR_RT_PREEMPT_ID,
     .flags = FLAVOR_DOES_IO + FLAVOR_IS_RT,
     .can_run_flavor = rtpreempt_can_run_flavor,
-    .exception_handler_hook = rtpreempt_exception_handler_hook,
+    .exception_handler_hook = posix_exception_handler_hook,
     .module_init_hook = rt_preempt_module_init_hook,
     .module_exit_hook = rt_preempt_module_exit_hook,
     .task_update_stats_hook = NULL,
@@ -718,7 +716,7 @@ flavor_descriptor_t flavor_posix_descriptor = {
     .flavor_id = RTAPI_FLAVOR_POSIX_ID,
     .flags = 0,
     .can_run_flavor = posix_can_run_flavor,
-    .exception_handler_hook = NULL,
+    .exception_handler_hook = posix_exception_handler_hook,
     .module_init_hook = posix_module_init_hook,
     .module_exit_hook = NULL,
     .task_update_stats_hook = NULL,
