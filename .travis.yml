@@ -146,8 +146,8 @@ matrix:
     #   env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
     # Tests
     # - Reduce total build time by starting longest jobs first
-    #- ARCHITECTURE=amd64 VERSION=10   CMD=test
-    #- ARCHITECTURE=amd64 VERSION=9    CMD=test
+    - ARCHITECTURE=amd64 VERSION=10   CMD=test
+    - ARCHITECTURE=amd64 VERSION=9    CMD=test
     # Packages
     # - Buster
     #- ARCHITECTURE=amd64 VERSION=10    CMD=deb
