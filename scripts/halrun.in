@@ -34,13 +34,12 @@ inifile=""
 theargs=""
 while getopts "ef:hi:kqsvIRQTUV" opt ; do
   case $opt in
-    h) help; exit 0;;
+    h) help; exit_handler 0;;
 
     U) halcmd -R
        halcmd stop
        halcmd unload all
-       $REALTIME stop
-       exit 0;;
+       exit_handler 0;;
 
     f) filename=$OPTARG;;
     i) inifile=$OPTARG;;
@@ -55,16 +54,13 @@ while getopts "ef:hi:kqsvIRQTUV" opt ; do
     R) theargs="$theargs -$opt";;
     Q) theargs="$theargs -$opt";;
     V) theargs="$theargs -$opt";;
-   \?) echo ""
-       echo "For usage try: $THIS -h"
-       exit 1;;
+   \?) exit_handler 1 "\nFor usage try: $THIS -h";;
   esac
 done
 shift $(($OPTIND - 1))
 
 if [ $# -gt 1 ] ; then
-  echo "$THIS: too many arguments <$*>"
-  exit 1
+  exit_handler 1 "$THIS: too many arguments <$*>"
 fi
 
 # filename can be specified two ways:
@@ -75,14 +71,14 @@ if [ $# -gt 0 ] ; then
     filename=$1
     shift
   else
-    echo "$THIS: Error: Specified '-f $1' and also <$filename>"
-    exit 1
+    exit_handler 1 "$THIS: Error: Specified '-f $1' and also <$filename>"
+    
   fi
 fi
 
 if $REALTIME status > /dev/null; then
-    echo "$THIS: Realtime already running.  Use 'halrun -U' to stop existing realtime session." 1>&2
-    exit 1
+    exit_handler 1 \
+	"$THIS: Realtime already running.  Use 'halrun -U' to stop existing realtime session."
 fi
 
 HAVEFILE=false
@@ -96,8 +92,7 @@ case $filename in
      "") # for nil filename, support interactive halcmd
          INTERACTIVE="halcmd $theargs -kf"
          ;;
-      *) echo "$THIS: Unknown file extension for filename=<$filename>"
-         exit 1
+      *) exit_handler 1 "$THIS: Unknown file extension for filename=<$filename>"
          ;;
 esac
 
@@ -108,7 +103,19 @@ case "$INTERACTIVE" in
            ;;
 esac
 
-$REALTIME start || exit $?
+exit_handler() {
+    rc=$1; shift
+    test -z "$*" || echo -e "$*" >&2
+    test $rc = 0 || $REALTIME stop
+    trap - ${EXIT_HANDLER_SIGNALS} EXIT
+    exit $rc
+}
+
+EXIT_HANDLER_SIGNALS="1 2 3 9 15"
+trap "exit_handler 1 Caught interrupt" $EXIT_HANDLER_SIGNALS
+trap "exit_handler 0" EXIT
+
+$REALTIME start || exit_handler 1 "realtime failed to start"
 
 if $HAVEFILE ; then
     halcmd $@; result=$?
@@ -120,4 +127,4 @@ halcmd stop || result=$?
 
 $REALTIME stop || result=$?
 
-exit $result
+exit_handler $result
