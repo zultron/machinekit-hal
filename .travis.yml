@@ -60,12 +60,12 @@ services:
 
 matrix:
   include:
-    # - os: linux
-    #   arch: amd64
-    #   env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
-    # - os: linux
-    #   arch: arm64
-    #   env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
+    - os: linux
+      arch: amd64
+      env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
+    - os: linux
+      arch: arm64
+      env: ARCHITECTURE=arm64 VERSION=20.04 DISTRIBUTION=ubuntu
     # - os: linux
     #   arch: amd64
     #   env: ARCHITECTURE=amd64 VERSION=10 DISTRIBUTION=debian
@@ -117,12 +117,12 @@ matrix:
     # - os: linux
     #   arch: amd64
     #   env: ARCHITECTURE=arm64 VERSION=9 DISTRIBUTION=debian
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=armhf VERSION=20.04 DISTRIBUTION=ubuntu
-    - os: linux
-      arch: arm64
-      env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=armhf VERSION=20.04 DISTRIBUTION=ubuntu
+    # - os: linux
+    #   arch: arm64
+    #   env: ARCHITECTURE=amd64 VERSION=20.04 DISTRIBUTION=ubuntu
     # - os: linux
     #   arch: arm64
     #   env: ARCHITECTURE=armhf VERSION=10 DISTRIBUTION=debian
@@ -146,8 +146,8 @@ matrix:
     #   env: ARCHITECTURE=armhf VERSION=9 DISTRIBUTION=debian
     # Tests
     # - Reduce total build time by starting longest jobs first
-    - ARCHITECTURE=amd64 VERSION=10   CMD=test
-    - ARCHITECTURE=amd64 VERSION=9    CMD=test
+    # - ARCHITECTURE=amd64 VERSION=10   CMD=test
+    # - ARCHITECTURE=amd64 VERSION=9    CMD=test
     # Packages
     # - Buster
     #- ARCHITECTURE=amd64 VERSION=10    CMD=deb
@@ -180,6 +180,7 @@ before_install:
 
 script:
   - |
+    set -x;
     LOCAL_DIR="$(pwd)";
     PARENT_DIR="$(dirname ${LOCAL_DIR})";
     DOCKER_IMAGE="machinekit-hal-${DISTRIBUTION}-builder-v.${ARCHITECTURE}_${VERSION}:latest";
