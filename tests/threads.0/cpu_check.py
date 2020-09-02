@@ -12,16 +12,22 @@ import re
 import time
 
 err_file = 'cpu_check_errors.txt'
-def fail(msgs):
-    with open(err_file, 'w') as f:
-        for msg in msgs.splitlines():
-            f.write('ERROR:  {}\n'.format(msg))
+stats_file = 'cpu_check_stats.txt'
+
+def write_stats():
+    with open(stats_file, 'w') as f:
         halcmd_cmd = halcmd.show.thread()
         f.write(halcmd_cmd.stdout.decode())
         ps_cmd = ps("-C", "rtapi:0", "-Lo",
                     "pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,comm,args")
         f.write(ps_cmd.stdout.decode())
-    raise SystemExit(1)
+
+err_file = 'cpu_check_errors.txt'
+def fail(msgs=None):
+    with open(err_file, 'w') as f:
+        if msgs is not None:
+            for msg in msgs.splitlines():
+                f.write('ERROR:  {}\n'.format(msg))
 
 # Be sure we're in the right directory; remove results file
 script_dir = os.path.dirname(__file__)
@@ -47,6 +53,9 @@ while True:
 
     time.sleep(0.2)
 
+# Write debug stats to file
+write_stats()
+
 # Read `halcmd show thread` output to determine requested CPUs
 cpus = []
 for line in lines[2:]:
@@ -62,7 +71,7 @@ for line in lines[2:]:
 if len(cpus) != 2:
     fail("Expected exactly two threads; found %d" % len(cpus))
 if cpus[0] != cpus[1]:
-    fail("Threads not running different CPUs:  %d and %d" % cpus)
+    fail("Threads not running different CPUs:  %d and %d" % (cpus[0],cpus[1]))
 
 # Read `ps` output for more checks
 err_msg = ''
@@ -81,6 +90,6 @@ for line in ps('-C', 'rtapi:0', '-Lo', 'class=,rtprio=,psr=,comm='):
 if err_msg:
     # Fail!!!
     fail(err_msg)
-else:
-    # Success!! Exit HAL component
-    h.exit()
+
+# Exit HAL component
+h.exit()

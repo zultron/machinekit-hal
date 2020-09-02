@@ -4,15 +4,25 @@ import os
 
 # Number of samples given to halsampler in test.hal
 MAX_LINES = 3500
+# Error and stats files
+err_file = 'cpu_check_errors.txt'
+stats_file = 'cpu_check_stats.txt'
 
-test_dir = os.path.dirname(sys.argv[1])
+test_dir = os.path.dirname(__file__)
 if test_dir:
     os.chdir(test_dir)
 
+def dump_stats():
+    try:
+        for line in open(stats_file, 'r'):
+            sys.stdout.write(line)
+    except:
+        print("Failed to open stats file")
+
 # If the error file exists, there's been a problem
-err_file = 'cpu_check_errors.txt'
 if os.path.exists(err_file):
     num_lines = 0
+    dump_stats()
     for line in open(err_file, 'r'):
         num_lines += 1
         sys.stdout.write(line)
@@ -59,12 +69,14 @@ for fname, numlines in (
         ("increment.txt", MAX_LINES),
         ("release.txt", MAX_LINES),
         ("reset.txt", MAX_LINES/10)):
+    dump_stats()
     count = 0
     for line in open(fname):
         count += 1
         ints = [int(i) for i in line.strip().split()]
         add_to_timeline(timeline, fname[:-4], ints)
     if ints[0] != numlines-1:
+        dump_stats()
         print("%s contained %d lines, not the expected %s lines!" %
               (fname, len(lines), MAX_LINES))
         raise SystemExit(1) # failure
@@ -120,4 +132,6 @@ for time in sorted(timeline.keys()):
         print_timeline(time, timeline)
         break
 
+if res:
+    dump_stats()
 raise SystemExit(res)
