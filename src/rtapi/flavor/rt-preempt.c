@@ -408,28 +408,11 @@ static void *realtime_thread(void *arg) {
                         "Moved task '%s' to cpuset '%s'",
                         task->name, task->cgname);
     }
-    if (!(task->flags & TF_NONRT)) {
-	if ((ret = realtime_set_priority(task))) {
-            if (!(flavor_descriptor->flags && FLAVOR_IS_RT)) {
-                // This requires privs - tell user how to obtain them
-                rtapi_print_msg(
-                    RTAPI_MSG_ERR,
-                    "to get non-preemptive scheduling with POSIX threads,");
-                rtapi_print_msg(
-                    RTAPI_MSG_ERR,
-                    "you need to run "
-                    "'sudo setcap cap_sys_nice=pe libexec/rtapi_app_posix'");
-                rtapi_print_msg(
-                    RTAPI_MSG_ERR,
-                    "you might have to install setcap "
-                    "(e.g.'sudo apt-get install libcap2-bin') to do this.");
-            } else {
-                rtapi_print_msg(
-                    RTAPI_MSG_ERR, "Task %s realtime_set_priority() failed %d",
-                    task->name, ret);
-                goto error;
-            }
-        }
+    if ((ret = realtime_set_priority(task))) {
+        rtapi_print_msg(
+            RTAPI_MSG_ERR, "Task %s realtime_set_priority() failed %d",
+            task->name, ret);
+        goto error;
     }
 
     /* We're done initializing. Open the barrier. */
