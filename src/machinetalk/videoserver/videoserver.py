@@ -99,7 +99,7 @@ class VideoServer(threading.Thread):
             print("dsname = ", video_device.dsname, "port =", video_device.port)
 
         arguments = ""
-        if video_device.arguments is not "":
+        if video_device.arguments != "":
             arguments = " " + video_device.arguments
 
         if which("videoserver_pub"):

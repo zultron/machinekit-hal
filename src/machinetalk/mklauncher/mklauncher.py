@@ -211,7 +211,7 @@ class Mklauncher(object):
                     launcher.terminating = False
                     # storing the image file
                     image_file = cfg.get(section, 'image')
-                    if image_file is not '':
+                    if image_file != '':
                         if not os.path.isabs(image_file):
                             image_file = os.path.join(root, image_file)
                         file_buffer = open(image_file, 'rb').read()
