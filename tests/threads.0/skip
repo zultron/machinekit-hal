@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if test "$TRAVIS_CPU_ARCH" = arm64; then
+    echo "Skipping test on Travis arm64 architecture"
+    exit 1
+fi
+exit 0
