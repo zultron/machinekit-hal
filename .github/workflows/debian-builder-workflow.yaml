@@ -598,7 +598,7 @@ jobs:
 
       - name: Execute Runtests
         run: |
-          docker run --tty --rm --cap-add=sys_nice -u "$(id -u):$(id -g)" \
+          docker run --tty --rm --init --cap-add=sys_nice -u "$(id -u):$(id -g)" \
             -v "$(pwd):/home/machinekit/build/machinekit-hal" \
             -w "/home/machinekit/build/machinekit-hal" \
             ${DOCKER_IMAGE} \
