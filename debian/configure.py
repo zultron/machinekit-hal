@@ -60,12 +60,16 @@ class Configure_script():
     def __init__(self: object, path):
         self.normalized_path = helpers.NormalizeMachinekitHALPath(path)()
         self.get_machinekit_hal_changelog_data()
-        self.machinekit_hal_version_string = "{0}.{1}.{2}-1.git{3}~{4}".format(
+        self.machinekit_hal_release_string = "{0}.{1}.{2}-1.git{3}~{4}".format(
             self.major_version,
             self.minor_version,
             self.commit_count,
             self.git_sha[0:9],
             self.distro_codename)
+        self.machinekit_hal_version_string = "{0}.{1}.{2}".format(
+            self.major_version,
+            self.minor_version,
+            self.commit_count)
 
     def get_machinekit_hal_changelog_data(self: object) -> None:
         control_template_file = "{}/debian/control.in".format(
@@ -76,8 +80,8 @@ class Configure_script():
             "Source: (.+)\n", control_template_string).group(1).strip().lower()
         version_file = "{}/VERSION".format(self.normalized_path)
         with open(version_file, "r") as reader:
-            version_string = reader.read()
-        base_version = version_string.strip().split('.')
+            release_string = reader.read()
+        base_version = release_string.strip().split('.')
         self.major_version = base_version[0]
         self.minor_version = base_version[1]
         self.distro_id = sh.lsb_release("-is",
@@ -153,7 +157,7 @@ class Configure_script():
     as an {9}th rebuild
 
  -- {10} <{11}>  {12}\n""".format(self.name,
-                                  self.machinekit_hal_version_string,
+                                  self.machinekit_hal_release_string,
                                   self.distro_codename,
                                   self.git_sha,
                                   self.commit_message_short,
@@ -166,13 +170,13 @@ class Configure_script():
                                   self.author_email,
                                   self.commit_time)
         machinekit_hal_changelog = self.get_machinekit_hal_base_changelog()
-        if self.machinekit_hal_version_string not in machinekit_hal_changelog[1]:
+        if self.machinekit_hal_release_string not in machinekit_hal_changelog[1]:
             new_changelog = "{}\n{}".format(
                 new_item, machinekit_hal_changelog[0])
             self.write_machinekit_hal_base_changelog(new_changelog)
         else:
             print("Machinekit-HAL chnagelog entry with version {0} already exists!".format(
-                self.machinekit_hal_version_string))
+                self.machinekit_hal_release_string))
 
     def create_tarball(self: object, output_path) -> None:
         tarball_file = "{0}/machinekit-hal_{1}.orig.tar.gz".format(
