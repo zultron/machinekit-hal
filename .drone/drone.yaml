@@ -113,13 +113,14 @@ steps:
     adduser --uid 1000 --ingroup machinekit --home /home/machinekit \
       --disabled-password --gecos "" machinekit;
   - |
-    su machinekit -c "whoami; \
+    su machinekit -c "set -x; \
+      whoami; \
       cd /build/machinekit-hal; \
       debian/bootstrap; \
       mk-build-deps -irs sudo -t                                              \
         'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y'; \
-      debian/ripruntests.py; RC=$?; \
-      cat /build/machinekit-hal/tests/threads.0/stderr; exit $RC;"
+      debian/ripruntests.py;" || \
+    { cat /build/machinekit-hal/tests/threads.0/stderr; exit 1; }
 
 volumes:
 - name: repository
