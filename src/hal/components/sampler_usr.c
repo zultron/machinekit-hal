@@ -171,6 +171,11 @@ int main(int argc, char **argv)
 	}
 	// make stdout be the named file
 	fd = open(argv[optind], O_WRONLY | O_CREAT, 0666);
+        if (fd < 0) {
+          rtapi_print_msg(RTAPI_MSG_ERR, "Failed to open file %s:  %s",
+                          argv[optind], strerror(fd));
+          exit(1);
+        }
 	close(1);
 	dup2(fd, 1);
     }
