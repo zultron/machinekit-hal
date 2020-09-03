@@ -45,6 +45,9 @@ import os
 import re
 import sys
 
+# Don't write __pycache__ directory, which breaks dpkg-buildpackage
+sys.dont_write_bytecode = True
+
 import importlib.util
 spec = importlib.util.spec_from_file_location(
     "machinekit_hal_script_helpers",
