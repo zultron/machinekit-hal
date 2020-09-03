@@ -87,11 +87,9 @@ Description: Universal framework for machine control based on Hardware Abstracti
 Package: machinekit-hal-dev
 Architecture: any
 Depends: 
-    make,
-    g++,
+    make:any,
     ${misc:Depends},
-    machinekit-hal (= ${binary:Version}),
-    yapps2
+    machinekit-hal (= ${binary:Version})
 Section: libs
 Description: Universal framework for machine control based on Hardware Abstraction Layer principle
  This package includes the development environment for Machinekit-HAL.
