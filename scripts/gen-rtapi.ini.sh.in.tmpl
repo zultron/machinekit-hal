@@ -51,12 +51,6 @@ SYSTEM_CONFIG_DIR=@HAL_SYSTEM_CONFIG_DIR@
 LIBEXEC_DIR=@HAL_LIBEXEC_DIR@
 BIN_DIR=@HAL_BIN_DIR@
 
-# Makefile.inc parameters
-USE_PORTABLE_PARPORT_IO=@USE_PORTABLE_PARPORT_IO@
-GIT_VERSION=@GIT_VERSION@
-RUN_IN_PLACE=@RUN_IN_PLACE@
-PIDOF=@PIDOF@
-
 
 #################################################
 # Global section
@@ -79,7 +73,6 @@ DEBUG=1
 HAL_SIZE=524288
 
 # Executables
-flavor=${LIBEXEC_DIR}/flavor
 rtapi_msgd=${LIBEXEC_DIR}/rtapi_msgd
 # rtapi_app should be defined in the appropriate flavor section below
 
@@ -92,7 +85,6 @@ BIN_DIR=${BIN_DIR}
 
 # build parameters
 USE_PORTABLE_PARPORT_IO=@USE_PORTABLE_PARPORT_IO@
-TARGET_PLATFORM=@TARGET_PLATFORM@
 GIT_VERSION=@GIT_VERSION@
 RUN_IN_PLACE=@RUN_IN_PLACE@
 PIDOF=@PIDOF@
