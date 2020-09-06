@@ -8,6 +8,7 @@
 # directory artifacts
 /tmp
 /machinekit-hal*/
+/libmachinekit/
 
 # file artifacts
 /*substvars

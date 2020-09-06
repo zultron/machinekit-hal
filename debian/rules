@@ -77,6 +77,7 @@ build-stamp: debian/control
 	    ./configure --prefix=/usr \
 	    --build=$(DEB_BUILD_GNU_TYPE) \
 	    --host=$(DEB_HOST_GNU_TYPE) \
+	    --libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
 	    --sysconfdir=/etc
 	cd src && $(MAKE) $(COMPILE_ENV) $(MAKEFLAGS) V=$(DH_VERBOSE)
 	touch build-stamp
@@ -148,16 +149,18 @@ install: build
 
 	mkdir -p debian/tmp/usr/lib/machinekit/prubin
 
-	dh_install --sourcedir=debian/tmp -Xusr/bin/pasm --fail-missing -v
+	mkdir -p debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
+	mv debian/tmp/usr/share/pkgconfig \
+	    debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/
+
+	dh_install --sourcedir=debian/tmp -Xusr/bin/pasm -v
 #       # These are installed in the -dev package
 	rm debian/machinekit-hal/usr/bin/comp \
 	    debian/machinekit-hal/usr/bin/instcomp \
 	    debian/machinekit-hal/usr/bin/halcompile \
 	    debian/machinekit-hal/usr/bin/runtests
 
-	# Eventually this will replace the above
-	# dh_install -Xusr/bin/pasm -v
-	# dh_missing --fail-missing
+	dh_missing --fail-missing
 
 # Build architecture-independent files here.
 binary-indep: build install

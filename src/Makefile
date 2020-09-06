@@ -651,6 +651,7 @@ install: install-kernel-dep install-kernel-indep
 
 install-dirs:
 	$(DIR)  $(DESTDIR)$(HAL_RTLIB_DIR) \
+		$(DESTDIR)$(libdir) \
 		$(DESTDIR)$(sysconfdir)/machinekit $(DESTDIR)$(bindir) \
 		$(DESTDIR)$(includedir)/machinekit \
 		$(DESTDIR)$(docdir) $(DESTDIR)$(ncfilesdir) \

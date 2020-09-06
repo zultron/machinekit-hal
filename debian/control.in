@@ -60,7 +60,6 @@ Depends:
     ${python3:Depends},
     ${misc:Depends},
     python3-numpy,
-    libmodbus-dev (>= 3.0),
     python3-xlib,
     python3-configobj,
     python3-zmq,
@@ -77,6 +76,7 @@ Depends:
     python3-pil,
     python3-gst-1.0,
     uuid-runtime,
+    libmachinekit,
     @RUNTIME_DEPENDENCIES@,
 Description: Universal framework for machine control based on Hardware Abstraction Layer principle
     .
@@ -86,16 +86,30 @@ Description: Universal framework for machine control based on Hardware Abstracti
 
 Package: machinekit-hal-dev
 Architecture: any
+Multi-Arch: same
 Depends: 
     make:any,
     ${misc:Depends},
-    machinekit-hal (= ${binary:Version})
+    libmachinekit,
+    pkg-config
 Section: libs
 Description: Universal framework for machine control based on Hardware Abstraction Layer principle
  This package includes the development environment for Machinekit-HAL.
  .
  This package includes files needed to build new realtime components and
  alternate front-ends for machinekit
+
+Package: libmachinekit
+Architecture: any
+Multi-Arch: same
+Depends:
+    ${shlibs:Depends},
+    ${python3:Depends},
+    ${misc:Depends},
+Description: Universal framework for machine control based on Hardware Abstraction Layer principle
+    .
+    This package provides shared libraries needed by the
+    machinekit-hal package.
 
 Package: machinekit-hal-rt-preempt
 Architecture: any
@@ -110,7 +124,6 @@ Description: Machinekit HAL RT_PREEMPT
  .
  This metapackage provides components and drivers that run on a realtime
  (PREEMPT RT) system.
-
 
 Package: machinekit-hal-posix
 Architecture: any

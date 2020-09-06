@@ -1,7 +1,6 @@
 usr/include/machinekit
-usr/lib/lib*.so
 usr/share/machinekit/Makefile.*
-usr/share/pkgconfig/machinekit-hal.pc
+usr/lib/*/pkgconfig/machinekit-hal.pc
 usr/bin/comp
 usr/bin/instcomp
 usr/bin/halcompile
