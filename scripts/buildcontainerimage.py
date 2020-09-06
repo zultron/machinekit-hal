@@ -102,6 +102,11 @@ class Buildcontainerimage_script():
                         return True
         return False
 
+    def check_for_docker_experimental(self: object) -> bool:
+        is_experimental_cmd = sh.docker.version('-f', '{{.Server.Experimental}}')
+        print(dir(is_experimental_cmd))
+        return is_experimental_cmd.stdout.decode().rstrip() == 'true'
+
     def build_docker_image(self: object, target, designation, specific_name) -> None:
         if any(tested is None for tested in [self.armed_docker_base_image,
                                              self.armed_image_architecture,
@@ -142,7 +147,11 @@ class Buildcontainerimage_script():
         docker_parameters = [
             "--file", "{0}/scripts/containers/buildsystem/debian/Dockerfile".format(
                 self.normalized_path),
-            "--tag", "{0}:latest".format(docker_tag)]
+            "--tag", "{0}:latest".format(docker_tag),
+        ]
+        if self.check_for_docker_experimental():
+            # Fix super annoying output in dumb terminal
+            docker_parameters.append("--progress=plain")
         if target is not None:
             docker_parameters.append(["--target", target])
 
@@ -151,8 +160,7 @@ class Buildcontainerimage_script():
         docker_build = sh.docker.bake("build")
         docker_build(*argument_list,
                      self.normalized_path,
-                     _out=sys.stdout.buffer,
-                     _err=sys.stderr.buffer,
+                     _fg=True,
                      _cwd=self.normalized_path)
 
 
