@@ -322,7 +322,7 @@ class Mklauncher(object):
             index = launcher.index
 
             importance = self._importances[self._launcher_ids[launcher.index]]
-            if importance is not launcher.importance:
+            if importance != launcher.importance:
                 tx_launcher.importance = importance
                 modified = True
 
