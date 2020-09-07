@@ -1422,13 +1422,13 @@ def process(filename, mode, outfilename):
         shutil.rmtree(tempdir)
 
 def usage(exitval=0):
-    print("""%(name)s: Build, compile, and install Machinekit HAL components
+    print("""{0}: Build, compile, and install Machinekit HAL components
 
 Usage:
-           %(name)s [ --compile (-c) | --preprocess (-p) | --document (-d) | --view-doc (-v) ] compfile...
-    [sudo] %(name)s [ --install (-i) |--install-doc (-j) ] compfile...
-           %(name)s --print-modinc
-""" % {'name': os.path.basename(sys.argv[0])})
+           {0} [ --compile (-c) | --preprocess (-p) | --document (-d) | --view-doc (-v) ] compfile...
+    [sudo] {0} [ --install (-i) |--install-doc (-j) ] compfile...
+           {0} --print-modinc
+""".format(os.path.basename(sys.argv[0])))
     raise SystemExit(exitval)
 
 

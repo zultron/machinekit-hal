@@ -648,8 +648,11 @@ def find_modinc():
             return e
     raise SystemExit("Error: Unable to locate Makefile.modinc")
 
-def build_usr(tempdir, filename, mode, origfilename):
-    binname = os.path.basename(os.path.splitext(filename)[0])
+def build_usr(tempdir, filename, mode, origfilename, cflags, compname=None):
+    if compname:
+        binname = compname
+    else:
+        binname = os.path.basename(os.path.splitext(filename)[0])
 
     makefile = os.path.join(tempdir, "Makefile")
     f = open(makefile, "w")
@@ -660,6 +663,8 @@ def build_usr(tempdir, filename, mode, origfilename):
     f.write("include %s\n" % find_modinc())
     f.write("EXTRA_CFLAGS += -I%s\n" % os.path.abspath(os.path.dirname(origfilename)))
     f.write("EXTRA_CFLAGS += -I%s\n" % os.path.abspath('.'))
+    if cflags:
+        f.write("EXTRA_CFLAGS += %s\n" % cflags)
     f.close()
     result = os.system("cd %s && make -S %s" % (tempdir, binname))
     if result != 0:
@@ -670,15 +675,25 @@ def build_usr(tempdir, filename, mode, origfilename):
     elif mode == COMPILE:
         shutil.copy(output, os.path.join(os.path.dirname(origfilename),binname))
 
-def build_rt(tempdir, filename, mode, origfilename):
-    objname = os.path.basename(os.path.splitext(filename)[0] + ".o")
+def build_rt(tempdir, filename, mode, c_sources, cflags, compname=None):
+    if compname:
+        objname = compname + ".o"
+    else:
+        objname = os.path.basename(os.path.splitext(filename)[0] + ".o")
+        c_sources = [c_sources,]
+    origdir = os.path.abspath(os.path.dirname(c_sources[0]))
+    c_objs = [s[:-2]+'.o' for s in c_sources]
     makefile = os.path.join(tempdir, "Makefile")
     f = open(makefile, "w")
-    f.write("obj-m += %s\n" % objname)
+    f.write("obj-m += %s.o\n" % compname)
+    f.write("%s-objs := \\\n" % compname)
+    f.write("    %s\n" % " ".join(c_objs))
     f.write("include %s\n" % find_modinc())
-    f.write("EXTRA_CFLAGS += -I%s\n" % os.path.abspath(os.path.dirname(origfilename)))
+    f.write("EXTRA_CFLAGS += -I%s\n" % origdir)
     f.write("EXTRA_CFLAGS += -I%s\n" % os.path.abspath('.'))
-    f.write("EXTRA_CFLAGS += -DRTAPI -L$(LIBDIR) -lhal")
+    f.write("EXTRA_CFLAGS += -DRTAPI -L$(LIBDIR) -lhal\n")
+    if cflags:
+        f.write("EXTRA_CFLAGS += %s\n" % cflags)
     f.close()
     if mode == INSTALL:
         target = "modules install"
@@ -689,12 +704,16 @@ def build_rt(tempdir, filename, mode, origfilename):
         raise SystemExit(os.WEXITSTATUS(result) or 1)
     if mode == COMPILE:
         for extension in ".ko", ".so", ".o":
-            kobjname = os.path.splitext(filename)[0] + extension
+            if compname:
+                kobjname = os.path.join(
+                    os.path.dirname(filename), compname + extension)
+            else:
+                kobjname = os.path.splitext(filename)[0] + extension
             if os.path.exists(kobjname):
                 shutil.copy(kobjname, os.path.basename(kobjname))
                 break
         else:
-            raise SystemExit("Error: Unable to copy module from temporary directory")
+            raise SystemExit("Error: Unable to copy module %s from temporary directory" % kobjname)
 
 ############################################################
 
@@ -951,7 +970,7 @@ def adocument(filename, outfilename, frontmatter):
 ###########################################################
 
 
-def process(filename, mode, outfilename):
+def process(filename, mode, outfilename, cflags):
     tempdir = tempfile.mkdtemp()
     try:
         if outfilename is None:
@@ -999,24 +1018,24 @@ def process(filename, mode, outfilename):
 
         if mode != PREPROCESS:
             if options.get("userspace"):
-                build_usr(tempdir, outfilename, mode, filename)
+                build_usr(tempdir, outfilename, mode, filename, cflags)
             else:
-                build_rt(tempdir, outfilename, mode, filename)
+                build_rt(tempdir, outfilename, mode, filename, cflags)
 
     finally:
         shutil.rmtree(tempdir)
 
 def usage(exitval=0):
-    print ("""%(name)s: Build, compile, and install Machinekit HAL components
+    print ("""{0}: Build, compile, and install Machinekit HAL components
 
 Usage:
-           %(name)s [ --compile (-c) | --preprocess (-p) | --document (-d) | --view-doc (-v) ] compfile...
-    [sudo] %(name)s [ --install (-i) | --install-doc (-j) ] compfile..
-           %(name)s --compile --userspace cfile...
-    [sudo] %(name)s --install --userspace cfile...
-    [sudo] %(name)s --install --userspace pyfile...
-           %(name)s --print-modinc
-""") % {'name': os.path.basename(sys.argv[0])}
+           {0} [ --compile (-c) | --preprocess (-p) | --document (-d) | --view-doc (-v) ] compfile...
+    [sudo] {0} [ --install (-i) | --install-doc (-j) ] compfile..
+           {0} --compile [--userspace] [--cflags=...] [--compname=...] cfile...
+    [sudo] {0} --install [--userspace] [--cflags=...] [--compname=...] cfile...
+    [sudo] {0} --install --userspace pyfile...
+           {0} --print-modinc
+""".format(os.path.basename(sys.argv[0])))
     raise SystemExit(exitval)
 
 def main():
@@ -1026,22 +1045,28 @@ def main():
     outfile = None
     frontmatter = []
     userspace = False
+    cflags = None
+    compname = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "f:luicpdjvo:h?",
                            ['frontmatter=', 'install', 'compile', 'preprocess', 'outfile=',
-                            'document', 'help', 'userspace', 'install-doc',
-                            'view-doc', 'require-license', 'print-modinc'])
+                            'document', 'help', 'userspace', 'cflags=', 'install-doc',
+                            'compname=', 'view-doc', 'require-license', 'print-modinc'])
     except getopt.GetoptError:
         usage(1)
 
     for k, v in opts:
         if k in ("-u", "--userspace"):
             userspace = True
+        if k in ("--cflags"):
+            cflags = v
         if k in ("-i", "--install"):
             mode = INSTALL
         if k in ("-c", "--compile"):
             mode = COMPILE
+        if k in ("--compname"):
+            compname = v
         if k in ("-p", "--preprocess"):
             mode = PREPROCESS
         if k in ("-d", "--document"):
@@ -1073,6 +1098,7 @@ def main():
         print (find_modinc())
         return 0
 
+    c_sources = list()
     for f in args:
         try:
             basename = os.path.basename(os.path.splitext(f)[0])
@@ -1095,7 +1121,7 @@ def main():
                 print ("INSTALLDOC", outfile)
                 adocument(f, outfile, frontmatter)
             elif f.endswith(".comp"):
-                process(f, mode, outfile)
+                process(f, mode, outfile, cflags)
             elif f.endswith(".py") and mode == INSTALL:
                 lines = open(f).readlines()
                 if lines[0].startswith("#!"): del lines[0]
@@ -1105,17 +1131,20 @@ def main():
                 except os.error: pass
                 open(outfile, "w").writelines(lines)
                 os.chmod(outfile, stat.S_IREAD & stat.S_IEXEC)
-            elif f.endswith(".c") and mode != PREPROCESS:
+            elif f.endswith(".c") and mode != PREPROCESS and not compname:
                 initialize()
                 tempdir = tempfile.mkdtemp()
                 try:
                     shutil.copy(f, tempdir)
                     if userspace:
-                        build_usr(tempdir, os.path.join(tempdir, os.path.basename(f)), mode, f)
+                        build_usr(tempdir, os.path.join(tempdir, os.path.basename(f)), mode, f, cflags)
                     else:
-                        build_rt(tempdir, os.path.join(tempdir, os.path.basename(f)), mode, f)
+                        build_rt(tempdir, os.path.join(tempdir, os.path.basename(f)), mode, f, cflags)
                 finally:
                     shutil.rmtree(tempdir)
+            elif f.endswith(".c") and mode != PREPROCESS and compname:
+                # Process all together later
+                c_sources.append(f)
             else:
                 raise SystemExit("Error: Unrecognized file type for mode %s: %r" % (modename[mode], f))
         except:
@@ -1125,6 +1154,25 @@ def main():
             except: # os.error:
                 pass
             raise ex_type(ex_value, exc_tb)
+
+    if not c_sources:
+        return
+
+    # Build C sources into single module
+    initialize()
+    tempdir = tempfile.mkdtemp()
+    try:
+        for f in c_sources:
+            shutil.copy(f, tempdir)
+        if userspace:
+            build_usr(tempdir, os.path.join(tempdir, os.path.basename(f)),
+                      mode, c_sources, cflags, compname)
+        else:
+            build_rt(tempdir, os.path.join(tempdir, os.path.basename(f)),
+                     mode, c_sources, cflags, compname)
+    finally:
+        shutil.rmtree(tempdir)
+
 if __name__ == '__main__':
     main()
 
