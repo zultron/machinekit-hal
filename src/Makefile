@@ -672,7 +672,7 @@ install-kernel-indep: install-dirs
 	$(EXE) ../scripts/runtests $(DESTDIR)$(bindir)
 	$(EXE) $(filter ../bin/%,$(TARGETS)) $(DESTDIR)$(bindir)
 	$(FILE) $(filter ../lib/%.a ../lib/%.so.0,$(TARGETS)) $(DESTDIR)$(libdir)
-	cp --no-dereference $(filter ../lib/%.so, $(TARGETS)) $(DESTDIR)$(libdir)
+	cp --no-dereference $(filter ../lib/lib%.so,$(TARGETS)) $(DESTDIR)$(libdir)
 #	# don't run ldconfig under fakeroot (silence dpkg-build warning)
 	-test -n "$$FAKED_MODE" || ldconfig $(DESTDIR)$(libdir)
 	$(FILE) $(HEADERS) $(DESTDIR)$(includedir)/machinekit/
