@@ -1619,7 +1619,10 @@ static int record_instparms(std::shared_ptr<Module> mi)
 
     csize = mi->elf_section(".rtapi_export" , &section);
     if (csize < 0) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "Can't open %s\n", mi->path().c_str());
+	rtapi_print_msg(
+            RTAPI_MSG_ERR,
+            "Can't open .rtapi_export elf section in module %s\n",
+            mi->path().c_str());
 	return -1;
     }
 
