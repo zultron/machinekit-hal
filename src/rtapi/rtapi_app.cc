@@ -1452,7 +1452,7 @@ int main(int argc, char **argv)
     while (1) {
 	int option_index = 0;
 	int curind = optind;
-	c = getopt_long (argc, argv, "ShH:m:I:f:r:U:NFdR:n:i:sz",
+	c = getopt_long (argc, argv, "Gd:DFi:I:f:U:n:R:szh",
 			 long_options, &option_index);
 	if (c == -1)
 	    break;
