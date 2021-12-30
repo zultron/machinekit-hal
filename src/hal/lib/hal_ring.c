@@ -345,6 +345,9 @@ hal_plug_t *halg_plug_new(const int use_hal_mutex,
 	else
 	    ring = halg_find_object_by_id(0, HAL_RING, args->ring_id).ring;
 
+        // make sure plug exists
+	hal_plug_t *plug = NULL;
+
 	// at this point the ring descriptor must be valid
 	if (ring == NULL)
 	    goto FAIL;
@@ -379,7 +382,6 @@ hal_plug_t *halg_plug_new(const int use_hal_mutex,
 	    goto FAIL;
 	}
 
-	hal_plug_t *plug = NULL;
 	// allocate plug descriptor
 	if ((plug = halg_create_objectf(0,
 					sizeof(hal_plug_t),
