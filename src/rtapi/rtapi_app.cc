@@ -641,7 +641,7 @@ static void exit_actions(int instance)
     machinetalk::Container reply;
 
     stop_threads();
-    sleep(0.2);
+    usleep(200000);
     exit_usercomps(NULL);
 
     size_t index = loading_order.size() - 1;
