@@ -85,7 +85,7 @@ static inline hal_list_t *dlist_remove_entry(hal_list_t * entry);
     dlist_entry(SHMPTR((ptr)->next), type, member)
 
 #define dlist_next_entry(pos, member)				\
-    dlist_entry(SHMPTR((pos)->member.next), typeof(*(pos)), member)
+    dlist_entry(SHMPTR((pos)->member.next), __typeof__(*(pos)), member)
 
 
 
@@ -96,9 +96,9 @@ static inline hal_list_t *dlist_remove_entry(hal_list_t * entry);
  * @member:     the name of the list_struct within the struct.
  */
 #define dlist_for_each_entry(pos, head, member)				\
-    for (pos = dlist_entry(SHMPTR((head)->next), typeof(*pos), member);	\
+    for (pos = dlist_entry(SHMPTR((head)->next), __typeof__(*pos), member);	\
 	 &pos->member != (head);					\
-	 pos = dlist_entry(SHMPTR(pos->member.next), typeof(*pos), member))
+	 pos = dlist_entry(SHMPTR(pos->member.next), __typeof__(*pos), member))
 
 /**
  * dlist_for_each_entry_safe - iterate over list of given type safe against removal of list entry
@@ -108,7 +108,7 @@ static inline hal_list_t *dlist_remove_entry(hal_list_t * entry);
  * @member:     the name of the list_head within the struct.
  */
 #define dlist_for_each_entry_safe(pos, n, head, member)			\
-    for (pos = dlist_first_entry(head, typeof(*pos), member),		\
+    for (pos = dlist_first_entry(head, __typeof__(*pos), member),       \
 	     n = dlist_next_entry(pos, member);				\
 	 &pos->member != (head);					\
 	 pos = n, n = dlist_next_entry(n, member))
