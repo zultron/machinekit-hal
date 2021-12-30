@@ -154,8 +154,8 @@ void refresh_trigger(void)
 	break;
 
     case HAL_S64:
-	if (fp_level > INT64_MAX) {
-	    fp_level = INT64_MAX;
+	if (fp_level > (double)INT64_MAX) {
+	    fp_level = (double)INT64_MAX;
 	}
 	if (fp_level < INT64_MIN) {
 	    fp_level = INT64_MIN;
@@ -163,8 +163,8 @@ void refresh_trigger(void)
 	ctrl_shm->trig_level.d_s64 = fp_level;
 	break;
     case HAL_U64:
-	if (fp_level > UINT64_MAX) {
-	    fp_level = UINT64_MAX;
+	if (fp_level > (double)UINT64_MAX) {
+	    fp_level = (double)UINT64_MAX;
 	}
 	if (fp_level < 0.0) {
 	    fp_level = 0.0;
