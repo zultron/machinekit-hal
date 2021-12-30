@@ -491,7 +491,8 @@ static inline void _autorelease_mutex_if(struct  _mutex_cleanup *c) {
 }
 
 #define _WITH_MUTEX_IF(mptr, unique, c)					\
-    struct _mutex_cleanup RTAPI_PASTE(__scope_protector_, unique)	\
+    struct _mutex_cleanup RTAPI_PASTE(__scope_protector_, unique) 	\
+         __attribute__((unused))                                        \
 	 __attribute__((cleanup(_autorelease_mutex_if))) = {		\
 	.cond = c,							\
 	.m = mptr,							\
