@@ -603,7 +603,6 @@ private:
     int          mHalCompId{-1};
     std::ostream mDevNull{nullptr};
     std::ostream* mHalCout{nullptr};
-    HandwheelStepmodes::Mode    mStepMode;
     bool                        mIsSpindleDirectionForward{true};
     Profiles::HalRequestProfile mHalRequestProfile;
 

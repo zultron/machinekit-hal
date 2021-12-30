@@ -77,7 +77,6 @@ void Hal::freeSimulatedPin(void** pin)
 Hal::Hal(Profiles::HalRequestProfile halRequestProfile) :
     mButtonNameToIdx(),
     mHalCout(&mDevNull),
-    mStepMode(HandwheelStepmodes::Mode::STEP),
     mHalRequestProfile(halRequestProfile)
 {
 }
