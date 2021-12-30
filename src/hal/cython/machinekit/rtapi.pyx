@@ -10,7 +10,8 @@ from cpython.bytes cimport PyBytes_FromString
 from cpython.buffer cimport PyBuffer_FillInfo
 from rtapi_app cimport (
     rtapi_connect, rtapi_newthread, rtapi_delthread,
-    rtapi_loadrt, rtapi_unloadrt, rtapi_newinst, rtapi_delinst, rtapi_cleanup
+    rtapi_loadrt, rtapi_unloadrt, rtapi_newinst, rtapi_delinst, rtapi_cleanup,
+    rtapi_rpcerror
     )
 
 _HAL_KEY                   = HAL_KEY
@@ -198,6 +199,10 @@ class RTAPIcommand:
         if r:
             raise RuntimeError(f"rtapi_delthread failed:  {strerror(-r)}")
 
+    def errmsg(self, r):
+        return rtapi_rpcerror().decode() or f"{strerror(-r)} ({-r})"
+
+
     def loadrt(self, *args, instance=0, **kwargs):
         cdef char** argv
 
@@ -211,7 +216,7 @@ class RTAPIcommand:
         r = rtapi_loadrt( instance, c_name, <const char **>argv)
         free(argv)
         if r:
-            raise RuntimeError(f"rtapi_loadrt '{args}' failed: {strerror(-r)}")
+            raise RuntimeError(f"rtapi_loadrt '{args}' failed: {self.errmsg(r)}")
 
         return hal.components[name.split('/')[-1]]
 
@@ -220,7 +225,7 @@ class RTAPIcommand:
             raise RuntimeError("unloadrt needs at least the module name as argument")
         r = rtapi_unloadrt( instance, name.encode())
         if r:
-            raise RuntimeError(f"rtapi_unloadrt '{name}' failed: {strerror(-r)}")
+            raise RuntimeError(f"rtapi_unloadrt '{name}' failed: {self.errmsg(r)}")
 
     def newinst(self, *args, instance=0, **kwargs):
         cdef char** argv
@@ -259,14 +264,14 @@ class RTAPIcommand:
         r = rtapi_newinst(instance, c_comp, c_instname, <const char **>argv)
         free(argv)
         if r:
-            raise RuntimeError(f"rtapi_newinst '{args}' failed: {strerror(-r)}")
+            raise RuntimeError(f"rtapi_newinst '{args}' failed: {self.errmsg(r)}")
 
         return hal.instances[instname]
 
     def delinst(self, instname, instance=0):
         r = rtapi_delinst(instance, instname.encode())
         if r:
-            raise RuntimeError(f"rtapi_delinst '{instname}' failed: {strerror(-r)}")
+            raise RuntimeError(f"rtapi_delinst '{instname}' failed: {self.errmsg(r)}")
 
 
 # default module to connect to RTAPI:
