@@ -1,7 +1,7 @@
 include Makefile.inc
 
 VFDB_SRCS = hal/user_comps/vfdb_vfd/vfdb_vfd.c
-VFDB_CFLAGS = -DDEBUG $(LIBMODBUS_CFLAGS) -I/usr/local/include -L/usr/local/lib
+VFDB_CFLAGS = -DDEBUG $(LIBMODBUS_CFLAGS)
 VFDB_LIBS = $(LIBMODBUS_LIBS) -lm ../lib/librtapi_math.so ../lib/libhalulapi.so.0 -L/usr/local/lib
 
 $(call TOOBJSDEPS, $(VFDB_SRCS)) : EXTRAFLAGS += $(VFDB_CFLAGS)
