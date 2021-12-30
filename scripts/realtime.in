@@ -148,7 +148,7 @@ Load(){
     local cmd=(${rtapi_msgd} --instance=$MK_INSTANCE $NAME_CMD
 			     --rtmsglevel=$DEBUG
 			     --usrmsglevel=$DEBUG
-                 --debug=$DEBUG
+			     --debug=$DEBUG
 			     --halsize=$HAL_SIZE $MSGD_OPTS)
     [ $DEBUG -eq 0 ] || echo "rtapi_msgd command:  ${cmd[@]}" >&2
     "${cmd[@]}" || (
