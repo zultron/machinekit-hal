@@ -344,7 +344,7 @@ PROFILE_CFLAGS :=
 PROFILE_LDFLAGS :=
 
 CFLAGS := $(INCLUDE) $(OPT) $(DEBUG) $(DPKG_CFLAGS) $(PROFILE_CFLAGS) \
-	-DULAPI $(call cc-option,-std=c11) $(CFLAGS)
+	-DULAPI $(call cc-option,-std=gnu11) $(CFLAGS)
 
 # make ck_pr.h happy:
 CFLAGS += $(CK_CFLAGS)
