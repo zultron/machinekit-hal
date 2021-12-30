@@ -162,14 +162,14 @@ static inline hal_s64_t rtapi_load_s64(const hal_s64_t *target)
 #endif
 
 #if !defined(HAVE_CK) || !defined(CK_F_PR_STORE_64)
-static inline void rtapi_store_u64(hal_u64_t *target, const hal_u64_t value)
+static inline void rtapi_store_u64(hal_u64_t *target, hal_u64_t value)
 {
-    __atomic_store(target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n(target, value, RTAPI_MEMORY_MODEL);
 }
 
-static inline void rtapi_store_s64(hal_s64_t *target, const hal_s64_t value)
+static inline void rtapi_store_s64(hal_s64_t *target, hal_s64_t value)
 {
-    __atomic_store(target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n(target, value, RTAPI_MEMORY_MODEL);
 }
 #endif
 
@@ -214,29 +214,30 @@ static inline hal_s32_t rtapi_load_s32(const hal_s32_t *target)
 
 static inline void * rtapi_load_ptr(const void *target)
 {
-    void *v;
-    __atomic_load((size_t *)target, &v, RTAPI_MEMORY_MODEL);
-    return v;
+    size_t v;
+    __atomic_load((size_t *)target, &v,
+                  RTAPI_MEMORY_MODEL);
+    return (void *)v;
 }
 
 static inline void rtapi_store_u8(hal_u8_t *target, hal_u8_t value)
 {
-    __atomic_store(target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n(target, value, RTAPI_MEMORY_MODEL);
 }
 
 static inline void rtapi_store_u32(hal_u32_t *target, hal_u32_t value)
 {
-    __atomic_store(target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n(target, value, RTAPI_MEMORY_MODEL);
 }
 
 static inline void rtapi_store_s32(hal_s32_t *target, hal_s32_t value)
 {
-    __atomic_store(target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n(target, value, RTAPI_MEMORY_MODEL);
 }
 
 static inline void rtapi_store_ptr(void *target, void *value)
 {
-    __atomic_store((size_t *)target, &value, RTAPI_MEMORY_MODEL);
+    __atomic_store_n((size_t *)target, (size_t)value, RTAPI_MEMORY_MODEL);
 }
 
 

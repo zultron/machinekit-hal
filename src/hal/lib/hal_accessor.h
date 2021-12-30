@@ -154,11 +154,11 @@ void hal_typefailure(const char *file,
 									\
     static inline const hal_##TYPE##_t					\
     _set_##TYPE##_pin(hal_pin_t *pin,					\
-		      const hal_##TYPE##_t value) {			\
+		      hal_##TYPE##_t value) {                           \
     hal_data_u *u =							\
 	(hal_data_u *)hal_ptr(pin->data_ptr);				\
     _CHECK(pin_type(pin), OTYPE);					\
-    SETTER( pin, ACCESS, value,  CAST);				\
+    SETTER( pin, ACCESS, value,  CAST);                                 \
     return value;							\
     }									\
 									\
@@ -261,10 +261,10 @@ SIGGETTER(_GETVALUEDOUBLE, float, HAL_FLOAT, f,   FLOATCAST);
 #define SIGSETTER(SETTER,  TYPE, OTYPE, ACCESS,  CAST)	\
     static inline const hal_##TYPE##_t					\
     _set_##TYPE##_sig(hal_sig_t *sig,					\
-		      const hal_##TYPE##_t value) {			\
+		      hal_##TYPE##_t value) {                           \
 	hal_data_u *u = &sig->value;					\
 	_CHECK(sig_type(sig), OTYPE);					\
-	SETTER( sig, ACCESS, value,  CAST);			\
+	SETTER( sig, ACCESS, value,  CAST);                             \
 	return value;							\
     }									\
 									\
