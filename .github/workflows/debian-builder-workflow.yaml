@@ -281,20 +281,21 @@ jobs:
       if: github.event_name == 'push'
       id: cloudsmith_checker
       run: |
-        if ! [ -z "$CLOUDSMITH_TOKEN" ]
+        if test -n "$CLOUDSMITH_TOKEN" -a -n "$CLOUDSMITH_NAMESPACE"
         then
           printf "%b" \
                  "Cloudsmith.io authorization token found in GitHub secret" \
                  " storage, will try to upload\n"
           echo "::set-output name=tokenPresent::true"
+          echo "::set-output name=cloudsmithNamespace::$CLOUDSMITH_NAMESPACE"
         else
           printf "%b" \
-                 "Cloudsmith.io authorization token not found in GitHub" \
-                 " secret storage\n"
+                 "CLOUDSMITH_TOKEN or CLOUDSMITH_NAMESPACE secrets not found\n"
           echo "::set-output name=tokenPresent::false"
         fi
       env:
         CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+        CLOUDSMITH_NAMESPACE: ${{ secrets.CLOUDSMITH_NAMESPACE }}
 
     - name: Check if signing key is present in GitHub secrets storage
       if: github.event_name == 'push'
@@ -758,23 +759,7 @@ jobs:
       - name: Upload the Debian packages to Cloudsmith hosting service
         run: |
           test_array=()
-          CLOUDSMITH_REPLY=$(cloudsmith list repos --output-format json)
-          FOUND_NAMESPACE=$(echo "$CLOUDSMITH_REPLY" | \
-            jq -e -r --arg INPUTREGEX "$REPOSITORY_REGEX" '.data[] | 
-            select(.slug|test($INPUTREGEX)) | .namespace')
-          FOUND_REPOSITORY=$(echo "$CLOUDSMITH_REPLY" | \
-            jq -e -r --arg INPUTREGEX "$REPOSITORY_REGEX" '.data[] | 
-            select(.slug|test($INPUTREGEX)) | .slug')
-          if [ "$FOUND_REPOSITORY" == "" -o "$FOUND_REPOSITORY" == "null" \
-            -o "$FOUND_NAMESPACE" == "" -o "$FOUND_NAMESPACE" == "null" ]
-          then
-            printf "No repository matching regular expression %s found\n" \
-              "$REPOSITORY_REGEX"
-            exit 1
-          fi
-          printf "Found repository %s/%s in Cloudsmith account\n" \
-            "$FOUND_NAMESPACE" \
-            "$FOUND_REPOSITORY"
+          echo "Uploading packages to Cloudsmith namespace $CLOUDSMITH_NAMESPACE"
           while IFS=  read -r -d $'\0'; do
             test_array+=("$REPLY")
           done < <(find . -type f -regextype egrep \
@@ -789,7 +774,7 @@ jobs:
               and (.architecture==$ARCHITECTURE)) |
               .osVersionCodename|ascii_downcase')
             cloudsmith push deb \
-              ${FOUND_NAMESPACE}/${FOUND_REPOSITORY}/${BASH_REMATCH[1]}/${OSCODENAME} \
+              ${CLOUDSMITH_NAMESPACE}/${BASH_REMATCH[1]}/${OSCODENAME} \
               ${package} \
               --republish
           done
@@ -798,4 +783,4 @@ jobs:
           PACKAGES_REGEX: '^.*/machinekit-hal-([a-z]{1,})-([a-z0-9]{1,})-([0-9\.]{1,})-${{ github.sha }}-${{ needs.prepareState.outputs.Timestamp }}/.{1,}\.d?deb$'
           REPOSITORY_REGEX: '^${{ github.event.repository.name }}$'
           CLOUDSMITH_API_KEY: '${{ secrets.CLOUDSMITH_TOKEN }}'
-
+          CLOUDSMITH_NAMESPACE:  '${{ secrets.CLOUDSMITH_NAMESPACE }}'
