@@ -312,7 +312,6 @@ XhcWhb04b6Component::XhcWhb04b6Component() :
     //mKeyEventCout(&mDevNull),
     //mHalInitCout(&mDevNull),
     mInitCout(&mDevNull),
-    packageReceivedEventReceiver(*this),
     mPendant(mHal, mUsb.getOutputPackageData())
 {
     setSimulationMode(true);

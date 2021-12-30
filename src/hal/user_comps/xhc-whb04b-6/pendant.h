@@ -397,8 +397,7 @@ class FeedRotaryButton : public RotaryButton
 {
 public:
     FeedRotaryButton(const KeyCode& keyCode = KeyCodes::Feed.undefined,
-                     HandwheelStepmodes::Mode stepMode = HandwheelStepmodes::Mode::CONTINUOUS,
-                     KeyEventListener* listener = nullptr);
+                     HandwheelStepmodes::Mode stepMode = HandwheelStepmodes::Mode::CONTINUOUS);
     ~FeedRotaryButton();
     virtual bool setKeyCode(const KeyCode& keyCode) override;
     void setStepMode(HandwheelStepmodes::Mode stepMode);
@@ -411,7 +410,6 @@ private:
     HandwheelStepmodes::Mode mStepMode;
     bool                     mIsPermitted;
     float                    mStepSize;
-    KeyEventListener* mEventListener;
 
     static const HandwheelStepModeStepSize       mStepStepSizeMapper;
     static const HandwheelContinuousModeStepSize mContinuousSizeMapper;
@@ -433,13 +431,10 @@ std::ostream& operator<<(std::ostream& os, const FeedRotaryButton& data);
 class AxisRotaryButton : public RotaryButton
 {
 public:
-    AxisRotaryButton(const KeyCode& keyCode = KeyCodes::Axis.undefined, KeyEventListener* listener = nullptr);
+    AxisRotaryButton(const KeyCode& keyCode = KeyCodes::Axis.undefined);
     virtual ~AxisRotaryButton();
     bool isPermitted() const override;
     AxisRotaryButton& operator=(const AxisRotaryButton& other);
-
-private:
-    KeyEventListener* mEventListener;
 };
 
 // ----------------------------------------------------------------------
@@ -451,7 +446,7 @@ std::ostream& operator<<(std::ostream& os, const AxisRotaryButton& data);
 class Handwheel
 {
 public:
-    Handwheel(const FeedRotaryButton& feedButton, KeyEventListener* listener = nullptr);
+    Handwheel(KeyEventListener* listener = nullptr);
     ~Handwheel();
     void enableVerbose(bool enable);
     void setMode(HandWheelCounters::CounterNameToIndex mode);
@@ -465,7 +460,6 @@ public:
 private:
     HandWheelCounters mCounters;
     bool              mIsEnabled{false};
-    const FeedRotaryButton& mFeedButton;
     KeyEventListener      * mEventListener;
     std::ostream          mDevNull{nullptr};
     std::ostream          * mWheelCout;
@@ -481,7 +475,7 @@ std::ostream& operator<<(std::ostream& os, const Handwheel& data);
 class ButtonsState
 {
 public:
-    ButtonsState(KeyEventListener* listener = nullptr, const ButtonsState* previousState = nullptr);
+    ButtonsState(KeyEventListener* listener = nullptr);
     ~ButtonsState();
 
     ButtonsState& operator=(const ButtonsState& other);
@@ -504,7 +498,6 @@ private:
     const MetaButtonCodes* mCurrentMetaButton;
     AxisRotaryButton mAxisButton;
     FeedRotaryButton mFeedButton;
-    const ButtonsState* mPreviousState;
     KeyEventListener  * mEventListener;
 };
 
@@ -612,9 +605,6 @@ private:
     Display      mDisplay;
     //! if in Lead mode: if true jog wheel changes the spindle speed, changes the feed overide otherwise
     bool         mIsLeadModeSpindle = true;
-
-    float mScale;
-    float mMaxVelocity;
 
     const char  * mPrefix;
     std::ostream  mDevNull{nullptr};

@@ -92,7 +92,6 @@ private:
     //std::ostream             * mKeyEventCout;
     //std::ostream             * mHalInitCout;
     std::ostream             * mInitCout;
-    OnUsbInputPackageListener& packageReceivedEventReceiver;
     bool    mIsCrcDebuggingEnabled{false};
     Pendant mPendant;
 

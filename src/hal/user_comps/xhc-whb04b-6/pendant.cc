@@ -607,13 +607,11 @@ const std::map<const KeyCode*, HandwheelLeadModeStepSize::PositionNameIndex>    
 // ----------------------------------------------------------------------
 
 FeedRotaryButton::FeedRotaryButton(const KeyCode& keyCode,
-                                   HandwheelStepmodes::Mode stepMode,
-                                   KeyEventListener* listener) :
+                                   HandwheelStepmodes::Mode stepMode) :
     RotaryButton(keyCode),
     mStepMode(stepMode),
     mIsPermitted(false),
-    mStepSize(0),
-    mEventListener(listener)
+    mStepSize(0)
 {
 }
 
@@ -725,9 +723,8 @@ bool FeedRotaryButton::isPermitted() const
 
 // ----------------------------------------------------------------------
 
-AxisRotaryButton::AxisRotaryButton(const KeyCode& keyCode, KeyEventListener* listener) :
-    RotaryButton(keyCode),
-    mEventListener(listener)
+AxisRotaryButton::AxisRotaryButton(const KeyCode& keyCode) :
+    RotaryButton(keyCode)
 {
 }
 
@@ -766,9 +763,8 @@ bool AxisRotaryButton::isPermitted() const
 
 // ----------------------------------------------------------------------
 
-Handwheel::Handwheel(const FeedRotaryButton& feedButton, KeyEventListener* listener) :
+Handwheel::Handwheel(KeyEventListener* listener) :
     mCounters(),
-    mFeedButton(feedButton),
     mEventListener(listener),
     mWheelCout(&std::cout),
     mPrefix("pndnt ")
@@ -853,12 +849,11 @@ void Handwheel::count(int8_t delta)
 
 // ----------------------------------------------------------------------
 
-ButtonsState::ButtonsState(KeyEventListener* listener, const ButtonsState* previousState) :
+ButtonsState::ButtonsState(KeyEventListener* listener) :
     mPressedButtons(),
     mCurrentMetaButton(&KeyCodes::Meta.undefined),
-    mAxisButton(KeyCodes::Axis.undefined, listener),
-    mFeedButton(KeyCodes::Feed.undefined, HandwheelStepmodes::Mode::CONTINUOUS, listener),
-    mPreviousState(previousState),
+    mAxisButton(KeyCodes::Axis.undefined),
+    mFeedButton(KeyCodes::Feed.undefined, HandwheelStepmodes::Mode::CONTINUOUS),
     mEventListener(listener)
 {
 }
@@ -993,8 +988,8 @@ FeedRotaryButton& ButtonsState::feedButton()
 Pendant::Pendant(Hal& hal, UsbOutPackageData& displayOutData) :
     mHal(hal),
     mPreviousButtonsState(this),
-    mCurrentButtonsState(this, &mPreviousButtonsState),
-    mHandWheel(mCurrentButtonsState.feedButton(), this),
+    mCurrentButtonsState(this),
+    mHandWheel(this),
     mDisplay(mCurrentButtonsState, hal, displayOutData),
     mPrefix("pndnt "),
     mPendantCout(&std::cout)
