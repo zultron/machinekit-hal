@@ -262,7 +262,8 @@ int posix_task_new_hook(task_data *task, int task_id) {
 }
 
 int posix_task_delete_hook(task_data *task, int task_id) {
-    int err_cancel, err_join;
+    int err_cancel = 0;
+    int err_join;
     void *returncode;
 
     /* Signal thread termination and wait for the thread to exit. */
