@@ -387,7 +387,7 @@ static void *realtime_thread(void *arg) {
     }
 
     // cgroup cpuset
-    if (task->cgname && task->cgname[0]) {
+    if (task->cgname[0]) {
         if (!have_cg) {
             rtapi_print_msg(
                 RTAPI_MSG_ERR, "Task '%s' requested cgroup '%s', "
