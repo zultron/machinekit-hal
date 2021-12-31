@@ -411,7 +411,7 @@ static void *realtime_thread(void *arg) {
     }
     if (!(task->flags & TF_NONRT)) {
 	if ((ret = realtime_set_priority(task))) {
-            if (!(flavor_descriptor->flags && FLAVOR_IS_RT)) {
+            if (!(flavor_descriptor->flags & FLAVOR_IS_RT)) {
                 // This requires privs - tell user how to obtain them
                 rtapi_print_msg(
                     RTAPI_MSG_ERR,
@@ -571,7 +571,7 @@ int posix_wait_hook(const int flags) {
 
 	FTS(ts)->wait_errors++;
 
-        if (!(flavor_descriptor->flags && FLAVOR_IS_RT)) {
+        if (!(flavor_descriptor->flags & FLAVOR_IS_RT)) {
             rtapi_exception_detail_t detail = {0};
             detail.task_id = task_id(task);
 
