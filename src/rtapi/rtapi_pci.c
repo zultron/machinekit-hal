@@ -338,7 +338,7 @@ void * rtapi_pci_ioremap(struct rtapi_pcidev *dev, int bar, size_t size)
 	}
 
 //	snprintf(path, (size_t)sizeof(path), UIO_PCI_PATH "/%s/resource%i", dev->busid, bar);
-	snprintf(path, 512, UIO_PCI_PATH "/%s/resource%i", dev->busid, bar);
+	snprintf(path, 384, UIO_PCI_PATH "/%s/resource%i", dev->busid, bar);
 
 	/* Open the resource node */
 	dev->mmio[bar].fd = open(path, O_RDWR | O_SYNC);
