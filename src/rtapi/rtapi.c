@@ -109,7 +109,7 @@ void init_rtapi_data(rtapi_data_t * data)
     data->timer_period = 0;
     /* init the arrays */
     for (n = 0; n <= RTAPI_MAX_MODULES; n++) {
-	data->module_array[n].state = EMPTY;
+	data->module_array[n].state = NO_MODULE;
 	data->module_array[n].name[0] = '\0';
     }
     for (n = 0; n <= RTAPI_MAX_TASKS; n++) {
