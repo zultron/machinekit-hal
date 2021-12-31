@@ -1,0 +1,6 @@
+# Generated
+--exclude=rtapi.h
+# Copies from src/directory
+--exclude=include
+# Package build artifacts in debian/machinekit-hal-dev/usr/include/
+--exclude=debian
