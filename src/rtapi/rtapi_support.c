@@ -38,6 +38,7 @@
 #define RTPRINTBUFFERLEN 256
 
 #include <stdio.h>		/* libc's vsnprintf() */
+#include <stdlib.h>		/* malloc(), free() */
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -63,11 +64,6 @@ ringbuffer_t rtapi_message_buffer;   // rtapi_message ring access strcuture
 static char logtag[TAGSIZE];
 static const char *origins[] = { "kernel", "rt", "user", "*invalid*" };
 
-typedef struct {
-    rtapi_msgheader_t hdr;
-    char buf[RTPRINTBUFFERLEN];
-} rtapi_msg_t;
-
 int vs_ringlogfv(const msg_level_t level,
 		 const pid_t pid,
 		 const msg_origin_t origin,
@@ -76,32 +72,37 @@ int vs_ringlogfv(const msg_level_t level,
 		 va_list ap)
 {
     int n;
-    rtapi_msg_t msg;
+    rtapi_msgheader_t* msg;
+    char msgbuf[RTPRINTBUFFERLEN];
 
     if (get_msg_level() == RTAPI_MSG_NONE)
 	return 0;
     if (level > get_msg_level())
 	return 0;
 
-    msg.hdr.origin = origin;
-    msg.hdr.pid = pid;
-    msg.hdr.level = level;
-    strncpy(msg.hdr.tag, tag, sizeof(msg.hdr.tag));
-
-    // do format outside critical section
-    n = vsnprintf(msg.buf, RTPRINTBUFFERLEN, format, ap);
+    n = vsnprintf(msgbuf, RTPRINTBUFFERLEN, format, ap);
 
     if (rtapi_message_buffer.header != NULL) {
+
+        msg = malloc(sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
+        msg->origin = origin;
+        msg->pid = pid;
+        msg->level = level;
+        strncpy(msg->tag, tag, sizeof(msg->tag));
+        strncpy(msg->buf, msgbuf, n + 1);
+
 	if (rtapi_message_buffer.header->use_wmutex &&
 	    rtapi_mutex_try(&rtapi_message_buffer.header->wmutex)) {
 	    global_data->error_ring_locked++;
 	    return -EBUSY;
 	}
 	// use copying writer to shorten criticial section
-	record_write(&rtapi_message_buffer, (void *) &msg,
+	record_write(&rtapi_message_buffer, (void *) msg,
 		     sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
 	if (rtapi_message_buffer.header->use_wmutex)
 	    rtapi_mutex_give(&rtapi_message_buffer.header->wmutex);
+
+        free(msg);
     } else {
 	// early startup, global_data & log ring not yet initialized
 	// log the message to both stderr and syslog
@@ -115,22 +116,22 @@ int vs_ringlogfv(const msg_level_t level,
 	    }
 	}
 
-	if (!strchr(msg.buf, '\n'))
-	    strcat(msg.buf,"\n");
+	if (!strchr(msgbuf, '\n'))
+	    strcat(msgbuf,"\n");
 	fprintf(stderr,
 	       "%d:%s:%d:%s %s",
 	       level,
 	       tag,
 	       pid,
 	       origins[origin & 3],
-	       msg.buf);
+	       msgbuf);
         syslog_async(rtapi2syslog(level),
 	       "%d:%s:%d:%s %s",
 	       level,
 	       tag,
 	       pid,
 	       origins[origin & 3],
-	       msg.buf);
+	       msgbuf);
     }
     return n;
 }
