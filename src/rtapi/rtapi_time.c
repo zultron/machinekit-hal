@@ -94,7 +94,7 @@ long long int rtapi_get_time(void) {
     res = flavor_get_time_hook(NULL);
     if (res == -ENOSYS) { // Unimplemented
         struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
         res = ts.tv_sec * 1000000000LL + ts.tv_nsec;
     }
     return res;
@@ -116,7 +116,7 @@ long long int rtapi_get_clocks(void) {
 #     else
         // Needed for e.g. ARM
         struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
         res = ts.tv_sec * 1000000000LL + ts.tv_nsec;
 #     endif
     }
