@@ -248,8 +248,6 @@ static int heartbeat(gpointer data)
 	}
     }
     if (ctrl_shm->state == DONE) {
-        if(!gtk_window_is_active(GTK_WINDOW(ctrl_usr->main_win)))
-            gtk_window_set_urgency_hint(GTK_WINDOW(ctrl_usr->main_win), TRUE);
 	capture_complete();
     } else if (ctrl_usr->run_mode == ROLL) capture_cont();
     return 1;
