@@ -102,6 +102,7 @@ endif
 $(eval $(call c_comp_build_rules,rtapi/rtapi.o,$(patsubst %.c,%.o,\
 	$(XXAPI_COMMON_SRCS) \
 	rtapi/flavor/rt-preempt.c \
+	rtapi/cpu_dma_latency.c \
 	$(XENOMAI_SRC) \
 	$(PCI_SRC) \
 	machinetalk/support/nanopb.c \
@@ -311,6 +312,37 @@ TARGETS += ../libexec/rtapi_msgd
 	bash $< > $@
 TARGETS += ../etc/machinekit/rtapi.ini
 
+##################################################################
+#                     cpu_dma_latency and [...]_helper
+##################################################################
+
+CPU_DMA_LATENCY_HELPER := ../libexec/cpu_dma_latency_helper
+CPU_DMA_LATENCY_HELPER_SRCS := rtapi/cpu_dma_latency_helper.c
+# Build binary
+$(call TOOBJSDEPS, $(CPU_DMA_LATENCY_HELPER_SRCS)) : \
+	EXTRAFLAGS = $(PCI_DEBUG_FLAGS)
+USERSRCS += $(CPU_DMA_LATENCY_HELPER_SRCS)
+$(CPU_DMA_LATENCY_HELPER): $(call TOOBJS, $(CPU_DMA_LATENCY_HELPER_SRCS))
+	$(ECHO) Linking $(notdir $@)
+	@mkdir -p $(dir $@)
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^
+TARGETS += $(CPU_DMA_LATENCY_HELPER)
+
+# Add setuid perms
+setuid_cpu_dma_latency_helper:
+	$(call fix_perms,$(CPU_DMA_LATENCY_HELPER))
+setuid:  setuid_cpu_dma_latency_helper
+
+# Install executable
+install-cpu_dma_latency_helper:
+	$(SETUID) $(CPU_DMA_LATENCY_HELPER) $(DESTDIR)$(HAL_LIBEXEC_DIR)
+install-kernel-dep:  install-cpu_dma_latency_helper
+
+# Tell cpu_dma_latency.c where cpu_dma_latency_helper executable lives
+CPU_DMA_LATENCY_HELPER_PATH := $(HAL_LIBEXEC_DIR)/$(notdir $(CPU_DMA_LATENCY_HELPER))
+CPU_DMA_LATENCY_RTOBJ := $(call TORTOBJS, rtapi/cpu_dma_latency.c)
+$(CPU_DMA_LATENCY_RTOBJ) $(patsubst %.o,%.d,$(CPU_DMA_LATENCY_RTOBJ)): \
+	EXTRA_CFLAGS += -DCPU_DMA_LATENCY_HELPER=\"$(CPU_DMA_LATENCY_HELPER_PATH)\"
 
 ##################################################################
 #                     C unit tests

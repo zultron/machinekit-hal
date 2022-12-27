@@ -29,6 +29,7 @@
 #include "rt-preempt.h"
 #include "rtapi.h"
 #include "rtapi_common.h"
+#include "cpu_dma_latency.h"
 #include <libcgroup.h>
 
 #include "config.h"
@@ -114,22 +115,17 @@ int rt_preempt_module_init_hook(void)
     retval = posix_module_init_hook();
     if(retval){
         rtapi_print_msg(RTAPI_MSG_ERR, "RT PREEMPT: POSIX module init failed with error %d", retval);
-        goto exit;
+        return retval;
     }
 
-    pm_qos_fd = open("/dev/cpu_dma_latency", O_RDWR);
-
-    if (pm_qos_fd < 0) 
-    {  
-    rtapi_print_msg(RTAPI_MSG_ERR, "RT PREEMPT: Could not open the Power Management Quality of Service interface file. Error: %s", strerror(errno));  
-    retval = -errno;
+    if (rtapi_set_cpu_dma_latency() != 0) {
+        rtapi_print_msg(
+            RTAPI_MSG_ERR, "RT PREEMPT: Failed to set CPU DMA latency");
+        return -1;
+    } else {;
+        rtapi_print_msg(RTAPI_MSG_INFO, "RT PREEMPT: CPU DMA latency set");
     }
 
-    write(pm_qos_fd, &target_qos, sizeof(target_qos));
-
-    rtapi_print_msg(RTAPI_MSG_INFO, "RT PREEMPT: PM_QOS activated");
-
-    exit:
     return retval;
 }
 #else
@@ -140,18 +136,13 @@ int rt_preempt_module_init_hook(void){ return posix_module_init_hook(); }
 #ifdef RTAPI
 void rt_preempt_module_exit_hook(void)
 {
-    if (pm_qos_fd < 0) 
-    {  
-        rtapi_print_msg(RTAPI_MSG_ERR, "RT PREEMPT: The Power Management Quality of Service interface file is not open!");  
-        return;
+    if (rtapi_unset_cpu_dma_latency() != 0) {
+        rtapi_print_msg(
+            RTAPI_MSG_ERR, "RT PREEMPT: Failed to unset CPU DMA latency");
+        return -1;
+    } else {;
+        rtapi_print_msg(RTAPI_MSG_INFO, "RT PREEMPT: CPU DMA latency unset");
     }
-
-    if(close(pm_qos_fd))
-    {
-        rtapi_print_msg(RTAPI_MSG_ERR, "RT PREEMPT: The Power Management Quality of Service interface file returned error on close. Error: %s", strerror(errno));
-    }
-
-    rtapi_print_msg(RTAPI_MSG_INFO, "RT PREEMPT: PM_QOS deactivated");
 }
 #else
 void rt_preempt_module_exit_hook(void){}
