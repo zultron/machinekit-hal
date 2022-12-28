@@ -1115,18 +1115,6 @@ static int mainloop(size_t  argc, char **argv)
 	exit(1);
     }
 
-    // make sure we're setuid root when we need to
-    if (use_drivers || (*flavor_feature_ptr)(NULL, FLAVOR_DOES_IO)) {
-	if (geteuid() != 0) {
-	    rtapi_print_msg(RTAPI_MSG_ERR,
-			    "rtapi_app:%d need to"
-			    " 'sudo make setuid' to access I/O?\n",
-			    rtapi_instance_loc);
-	    global_data->rtapi_app_pid = 0;
-	    exit(EXIT_FAILURE);
-	}
-    }
-
     // assorted RT incantations - memory locking, prefaulting etc
     if ((retval = harden_rt())) {
 	rtapi_print_msg(RTAPI_MSG_ERR,
