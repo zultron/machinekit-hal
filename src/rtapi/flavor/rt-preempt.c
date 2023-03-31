@@ -65,9 +65,6 @@ static pthread_once_t task_key_once = PTHREAD_ONCE_INIT;
 
 int posix_task_self_hook(void);
 
-// Static file descriptor for the Power Management Quality of Service interface (PM QOS)
-static int pm_qos_fd = -1;
-
 
 typedef struct {
     int deleted;
@@ -110,7 +107,6 @@ int posix_module_init_hook(void)
 int rt_preempt_module_init_hook(void)
 {
     int retval = -1;
-    __s32 target_qos = 0;
 
     retval = posix_module_init_hook();
     if(retval){
@@ -139,7 +135,7 @@ void rt_preempt_module_exit_hook(void)
     if (rtapi_unset_cpu_dma_latency() != 0) {
         rtapi_print_msg(
             RTAPI_MSG_ERR, "RT PREEMPT: Failed to unset CPU DMA latency");
-        return -1;
+        return;
     } else {;
         rtapi_print_msg(RTAPI_MSG_INFO, "RT PREEMPT: CPU DMA latency unset");
     }
