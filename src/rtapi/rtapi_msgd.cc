@@ -54,8 +54,6 @@
 #include <sys/prctl.h>
 #include <sys/resource.h>
 
-using namespace std;
-
 #include <rtapi.h>
 #include <shmdrv.h>
 #include <ring.h>
