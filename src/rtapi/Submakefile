@@ -334,8 +334,8 @@ setuid_cpu_dma_latency_helper:
 setuid:  setuid_cpu_dma_latency_helper
 
 # Install executable
-install-cpu_dma_latency_helper:
-	$(SETUID) $(CPU_DMA_LATENCY_HELPER) $(DESTDIR)$(HAL_LIBEXEC_DIR)
+install-cpu_dma_latency_helper:  install-dirs
+	$(SETUID) $(CPU_DMA_LATENCY_HELPER) $(DESTDIR)$(HAL_LIBEXEC_DIR)/
 install-kernel-dep:  install-cpu_dma_latency_helper
 
 # Tell cpu_dma_latency.c where cpu_dma_latency_helper executable lives
