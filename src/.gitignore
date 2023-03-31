@@ -5,8 +5,10 @@
 /Makefile.modinc
 /aclocal.m4
 /config.h
+/config.guess
 /config.log
 /config.status
+/config.sub
 /objects
 /depends
 /autom4te.cache
