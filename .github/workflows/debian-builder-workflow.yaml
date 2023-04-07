@@ -49,17 +49,17 @@ jobs:
       HasSpecificDockerRegistry: ${{ steps.docker_registry_checker.outputs.hasRegistry }}
       Timestamp: ${{ steps.timestamp_exporter.outputs.timestamp }}
 
+    concurrency:
+      # Cancel any previous run of the same workflow on the same branch
+      group: ${{ github.ref }}
+      cancel-in-progress: true
+
     steps:
     - name: Show GitHub context as a JSON
       run: |
         echo "$GITHUB_CONTEXT"
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
-    
-    - name: Cancel any previous run of the same workflow on the same branch
-      uses: styfle/cancel-workflow-action@0.4.1
-      with:
-        access_token: ${{ github.token }}
 
       # Fetch the whole history here as there is no way of knowing how many
       # commits there were in push event
@@ -96,7 +96,7 @@ jobs:
               sub( "@TAG@"; $tag ),
             tag: $tag}
           }]}')
-        echo "::set-output name=matrix::$ALLOWED_COMBINATIONS"
+        echo "matrix=$ALLOWED_COMBINATIONS" >> $GITHUB_STATE
         printf "%b"                                                            \
                "JSON for allowed combinations of OS and architecture:\n"       \
                "===========================================================\n"
@@ -151,7 +151,7 @@ jobs:
         printf "%b"                                         \
                "All images present in registry, no missing" \
                " packages waiting to be build.\n"
-        echo "::set-output name=image_data::$IMAGE_DATA"
+        echo "image_data=$IMAGE_DATA" >> $GITHUB_STATE
       env:
         AUTHORIZATION_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         API_BASE_ADDRESS: "https://docker.pkg.github.com/v2"
@@ -190,7 +190,7 @@ jobs:
         printf "%b"                                                        \
                "All cached Docker images have valid vcs-ref ($COMMON_REF)" \
                " labels.\n"
-        echo "::set-output name=git_sha::$COMMON_REF"
+        echo git_sha=$COMMON_REF >> $GITHUB_STATE
       env:
         INPUT_JSON: '${{ steps.docker_data_downloader.outputs.image_data }}'
         DOCKER_PREFIX: 'docker.pkg.github.com/${{ github.repository }}'
@@ -261,8 +261,8 @@ jobs:
         fi
         OS_MATRIX=$(jq -c '{include: [.include[] | 
           select(.architecture == "amd64")]}' <<< "$MAIN_MATRIX")
-        echo "::set-output name=matrix::$MAIN_MATRIX"
-        echo "::set-output name=osMatrix::$OS_MATRIX"
+        echo "matrix=$MAIN_MATRIX" >> $GITHUB_STATE
+        echo "osMatrix=$OS_MATRIX" >> $GITHUB_STATE
         printf "%b"                                                            \
                "JSON string for Main Matrix:\n"                                \
                "===========================================================\n"
@@ -286,12 +286,12 @@ jobs:
           printf "%b" \
                  "Cloudsmith.io authorization token found in GitHub secret" \
                  " storage, will try to upload\n"
-          echo "::set-output name=tokenPresent::true"
-          echo "::set-output name=cloudsmithNamespace::$CLOUDSMITH_NAMESPACE"
+          echo tokenPresent=true >> $GITHUB_STATE
+          echo cloudsmithNamespace=$CLOUDSMITH_NAMESPACE >> $GITHUB_STATE
         else
           printf "%b" \
                  "CLOUDSMITH_TOKEN or CLOUDSMITH_NAMESPACE secrets not found\n"
-          echo "::set-output name=tokenPresent::false"
+          echo tokenPresent=false >> $GITHUB_STATE
         fi
       env:
         CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
@@ -304,10 +304,10 @@ jobs:
         if ! [ -z "$SIGNING_KEY" ]
         then
           printf "Signing key found in GitHub secret storage, will try to sign\n"
-          echo "::set-output name=keyPresent::true"
+          echo keyPresent=true >> $GITHUB_STATE
         else
           printf "Signing key not found in GitHub secret storage\n"
-          echo "::set-output name=keyPresent::false"
+          echo keyPresent=false >> $GITHUB_STATE
         fi
       env:
         SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -327,10 +327,10 @@ jobs:
           printf "%b" \
                  "Docker Registry data found in GitHub secret storage," \
                  " will try to upload\n"
-          echo "::set-output name=hasRegistry::true"
+          echo hasRegistry=true >> $GITHUB_STATE
         else
           printf "Docker Registry data not found in GitHub secret storage\n"
-          echo "::set-output name=hasRegistry::false"
+          echo hasRegistry=false >> $GITHUB_STATE
         fi
       env:
         DOCKER_REGISTRY_NAME: ${{ secrets.DOCKER_REGISTRY_NAME }}
@@ -342,7 +342,7 @@ jobs:
       id: timestamp_exporter
       run: |
         TIMESTAMP=$(date +%s)
-        echo "::set-output name=timestamp::$TIMESTAMP"
+        echo timestamp=$TIMESTAMP >> $GITHUB_STATE
         printf "Timestamp for this workflow run is $TIMESTAMP\n"
 
   buildMachinekitHALDebianPackages:
@@ -545,8 +545,8 @@ jobs:
               ;;
           esac
           printf "This job is going to use $RENAMEARCH as an achitecture tag\n"
-          echo "::set-output name=architecture::$RENAMEARCH"
-      
+          echo architecture=$RENAMEARCH >> $GITHUB_STATE
+
       - name: Prepare specific Python version for Machinekit-HAL build scripts
         if: needs.prepareState.outputs.BuildDockerImages == 'true'
         uses: actions/setup-python@v2
