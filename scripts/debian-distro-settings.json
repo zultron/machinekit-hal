@@ -2,12 +2,6 @@
   "osVersions": [
     {
       "distributionID": "Debian",
-      "distributionCodename": "Stretch",
-      "baseImage": "debian:stretch",
-      "releaseNumber": 9
-    },
-    {
-      "distributionID": "Debian",
       "distributionCodename": "Buster",
       "baseImage": "debian:buster",
       "releaseNumber": 10
@@ -20,21 +14,15 @@
     },
     {
       "distributionID": "Ubuntu",
-      "distributionCodename": "Bionic",
-      "baseImage": "ubuntu:bionic",
-      "releaseNumber": 18.04
-    },
-    {
-      "distributionID": "Ubuntu",
       "distributionCodename": "Focal",
       "baseImage": "ubuntu:focal",
       "releaseNumber": 20.04
     },
     {
       "distributionID": "Ubuntu",
-      "distributionCodename": "Hirsute",
-      "baseImage": "ubuntu:hirsute",
-      "releaseNumber": 21.04
+      "distributionCodename": "Jammy",
+      "baseImage": "ubuntu:jammy",
+      "releaseNumber": 22.04
     }
   ],
   "allowedCombinations": [
@@ -67,7 +55,7 @@
       "architecture": "amd64"
     },
     {
-      "osVersionNumber": 21.04,
+      "osVersionNumber": 22.04,
       "architecture": "amd64"
     },
     {
@@ -87,7 +75,7 @@
       "architecture": "armhf"
     },
     {
-      "osVersionNumber": 21.04,
+      "osVersionNumber": 22.04,
       "architecture": "armhf"
     },
     {
@@ -107,7 +95,7 @@
       "architecture": "arm64"
     },
     {
-      "osVersionNumber": 21.04,
+      "osVersionNumber": 22.04,
       "architecture": "arm64"
     }
   ],
