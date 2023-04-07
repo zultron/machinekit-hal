@@ -61,7 +61,7 @@ RUN apt-get update &&                                                           
         ca-certificates &&                                                        \
     curl -1sLf                                                                    \
     'https://dl.cloudsmith.io/public/machinekit/machinekit/cfg/setup/bash.deb.sh' \
-        | distro="$(lsb_release -is)" codename="$(lsb_release -cs)" bash -x &&    \
+        | distro="$(lsb_release -is)" codename="$(lsb_release -cs)" version="$(lsb_release -rs)" bash -x &&    \
     apt-get clean
 
 # Update system OS
