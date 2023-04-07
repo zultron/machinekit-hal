@@ -386,6 +386,7 @@ jobs:
 
       - name: Prepare the Docker image
         run: |
+          set -x
           if [ "${{ needs.prepareState.outputs.BuildDockerImages }}" == "true" ]
           then
             scripts/buildcontainerimage.py -d ${IMAGE_NAME_PREFIX} \
