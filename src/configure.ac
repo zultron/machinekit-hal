@@ -57,7 +57,7 @@ AC_MSG_CHECKING(build toplevel)
 BUILD_TOPLEVEL="$(cd ..; pwd -P)"
 AC_MSG_RESULT($BUILD_TOPLEVEL)
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 # Support some of the standard configure options for directories
 AC_PREFIX_DEFAULT(run-in-place)
@@ -884,10 +884,13 @@ if test -n "$XENOMAI_THREADS_RTS"; then
     AC_PRUNE_DEFAULT_LDFLAGS(LIBS)
     CFLAGS="$CFLAGS $($XENOMAI_THREADS_RTS --cflags)"
     CPPFLAGS="$CPPFLAGS $($XENOMAI_THREADS_RTS --cflags)"
-    AC_CHECK_LIB($XENOMAI_SKIN, rt_task_create,,
-        with_xenomai2=no; with_xenomai_kernel=no)
-    AC_CHECK_HEADERS($XENOMAI_SKIN/task.h,,
-        with_xenomai2=no; with_xenomai_kernel=no)
+    AC_CHECK_LIB([[$XENOMAI_SKIN]], [rt_task_create],,
+        [[with_xenomai2=no; with_xenomai_kernel=no]])
+    if test "$XENOMAI_SKIN" = native; then
+        AC_CHECK_HEADERS(native/task.h,,with_xenomai2=no; with_xenomai_kernel=no)
+    else
+        with_xenomai2=no
+    fi
     LIBS="$LIBS_hold"
     CFLAGS="$CFLAGS_hold"
     CPPFLAGS="$CPPFLAGS_hold"
@@ -1552,7 +1555,6 @@ AH_VERBATIM([_GNU_SOURCE],
 #endif
 ])
 
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_FUNCS(semtimedop)
 LIBS_hold=$LIBS
@@ -1747,7 +1749,7 @@ AC_SUBST([SITEPY])
 ##############################################################################
 # files that get created by ./configure                                      #
 ##############################################################################
-AC_CONFIG_HEADER(rtapi/rtapi.h)
+AC_CONFIG_HEADERS([rtapi/rtapi.h])
 AC_CONFIG_FILES([../scripts/gen-rtapi.ini.sh])
 AC_CONFIG_FILES([../scripts/halrun], [chmod +x ../scripts/halrun])
 AC_CONFIG_FILES([../scripts/rip-environment], [chmod +x ../scripts/rip-environment])
