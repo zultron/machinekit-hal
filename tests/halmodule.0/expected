@@ -8,9 +8,9 @@ set HAL_S32 100000.0 ok
 set HAL_S32 99.99 99
 set HAL_S32 True ok
 S32 fail
-set HAL_S32 2147483648 OverflowError: Python int too large to convert to C long
-set HAL_S32 -2147483649 OverflowError: Python int too large to convert to C long
-set HAL_S32 1.98225e+50 OverflowError: Python int too large to convert to C long
+set HAL_S32 2147483648 OverflowError: int too big to convert
+set HAL_S32 -2147483649 OverflowError: int too big to convert
+set HAL_S32 1.98225e+50 OverflowError: int too big to convert
 set HAL_S32 foo TypeError: Failed to convert str('foo') to int type
 set HAL_S32 None TypeError: Failed to convert NoneType(None) to int type
 U32 pass
@@ -22,7 +22,7 @@ set HAL_U32 99.99 99
 set HAL_U32 True ok
 U32 fail
 set HAL_U32 -1 OverflowError: can't convert negative value to unsigned int
-set HAL_U32 4294967296 OverflowError: Python int too large to convert to C unsigned long
+set HAL_U32 4294967296 OverflowError: int too big to convert
 set HAL_U32 1.98225e+50 OverflowError: Python int too large to convert to C unsigned long
 set HAL_U32 foo TypeError: Failed to convert str('foo') to int type
 set HAL_U32 None TypeError: Failed to convert NoneType(None) to int type

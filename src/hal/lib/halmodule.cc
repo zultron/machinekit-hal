@@ -91,8 +91,7 @@ bool from_python(PyObject *o, hal_u32_t *i) {
         unsigned long ul = PyLong_AsUnsignedLong(o);
         if (PyErr_Occurred()) return false;
         if ((*i = (hal_u32_t)ul) != ul) {
-            PyErr_Format(PyExc_OverflowError,
-                         "Python int too large to convert to C unsigned long");
+            PyErr_Format(PyExc_OverflowError, "int too big to convert");
             return false;
         }
         return true;
@@ -117,12 +116,24 @@ bool from_python(PyObject *o, hal_u32_t *i) {
 bool from_python(PyObject *o, hal_s32_t *i) {
     // int- or float-specific conversions:  32-bit int types need
     // annoying extra checks on 64-bit, since long int is 64-bits
-    if (PyLong_Check(o) || PyFloat_Check(o)) {
+    if (PyLong_Check(o)) {
         long l = PyLong_AsLong(o);
         if (PyErr_Occurred()) return false;
         if ((*i = (hal_s32_t)l) != l) {
-            PyErr_Format(PyExc_OverflowError,
-                         "Python int too large to convert to C long");
+            PyErr_Format(PyExc_OverflowError, "int too big to convert");
+            return false;
+        }
+        return true;
+    }
+    if (PyFloat_Check(o)) {
+        // Python 3.10 doesn't like PyLong_AsLong(PyFloat):
+        //   TypeError: 'float' object cannot be interpreted as an integer
+        double tmp_double = PyFloat_AsDouble(o);
+        PyObject *tmp_long = PyLong_FromDouble(tmp_double);
+        long l = PyLong_AsLongLong(tmp_long);
+        if (PyErr_Occurred()) return false;
+        if ((*i = (hal_s32_t)l) != l) {
+            PyErr_Format(PyExc_OverflowError, "int too big to convert");
             return false;
         }
         return true;
@@ -169,8 +180,16 @@ bool from_python(PyObject *o, hal_u64_t *i) {
 
 bool from_python(PyObject *o, hal_s64_t *i) {
     // int- or float-specific conversions
-    if (PyLong_Check(o) || PyFloat_Check(o)) {
+    if (PyLong_Check(o)) {
         *i = PyLong_AsLongLong(o);
+        return !PyErr_Occurred();
+    }
+    if (PyFloat_Check(o)) {
+        // Python 3.10 doesn't like PyLong_AsLongLong(PyFloat):
+        //   TypeError: 'float' object cannot be interpreted as an integer
+        double tmp_double = PyFloat_AsDouble(o);
+        PyObject *tmp_long = PyLong_FromDouble(tmp_double);
+        *i = PyLong_AsLongLong(tmp_long);
         return !PyErr_Occurred();
     }
 
@@ -322,6 +341,8 @@ static int pyhal_write_common(halitem *pin, PyObject *value) {
             }
             case HAL_U32: {
                 hal_u32_t tmp;
+                // if (PyFloat_Check(value))
+                //     value = PyLong_FromDouble
                 if(!from_python(value, &tmp)) return -1;
                 *pin->u->pin.u32 = tmp;
                 break;
@@ -744,6 +765,8 @@ static void pyhalpin_delete(PyObject *_self) {
 
 static PyObject * pyhal_pin_set(PyObject * _self, PyObject * value) {
     pyhalitem * self = (pyhalitem *) _self;
+    // if ((self->pin.type == HAL_S32) ||
+    // PyLong_FromDouble(value);
     if (pyhal_write_common(&self->pin, value) == -1)
 	return NULL;
     Py_RETURN_NONE;
