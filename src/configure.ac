@@ -117,7 +117,7 @@ else
    ac_cv_env_PKG_CONFIG_set=set
 fi
 AC_CONFIG_MACRO_DIR(/usr/share/aclocal)
-
+AC_CONFIG_AUX_DIR(autoconf)
 
 ##############################################################################
 # Section 2                                                                  #
