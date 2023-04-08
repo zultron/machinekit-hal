@@ -1,24 +1,6 @@
 {
   "osVersions": [
     {
-      "distributionID": "Debian",
-      "distributionCodename": "Buster",
-      "baseImage": "debian:buster",
-      "releaseNumber": 10
-    },
-    {
-      "distributionID": "Debian",
-      "distributionCodename": "Bullseye",
-      "baseImage": "debian:bullseye",
-      "releaseNumber": 11
-    },
-    {
-      "distributionID": "Ubuntu",
-      "distributionCodename": "Focal",
-      "baseImage": "ubuntu:focal",
-      "releaseNumber": 20.04
-    },
-    {
       "distributionID": "Ubuntu",
       "distributionCodename": "Jammy",
       "baseImage": "ubuntu:jammy",
@@ -27,72 +9,12 @@
   ],
   "allowedCombinations": [
     {
-      "osVersionNumber": 9,
-      "architecture": "i386"
-    },
-    {
-      "osVersionNumber": 18.04,
-      "architecture": "i386"
-    },
-    {
-      "osVersionNumber": 10,
-      "architecture": "i386"
-    },
-    {
-      "osVersionNumber": 9,
-      "architecture": "amd64"
-    },
-    {
-      "osVersionNumber": 18.04,
-      "architecture": "amd64"
-    },
-    {
-      "osVersionNumber": 10,
-      "architecture": "amd64"
-    },
-    {
-      "osVersionNumber": 20.04,
-      "architecture": "amd64"
-    },
-    {
       "osVersionNumber": 22.04,
       "architecture": "amd64"
     },
     {
-      "osVersionNumber": 9,
-      "architecture": "armhf"
-    },
-    {
-      "osVersionNumber": 18.04,
-      "architecture": "armhf"
-    },
-    {
-      "osVersionNumber": 10,
-      "architecture": "armhf"
-    },
-    {
-      "osVersionNumber": 20.04,
-      "architecture": "armhf"
-    },
-    {
       "osVersionNumber": 22.04,
       "architecture": "armhf"
-    },
-    {
-      "osVersionNumber": 9,
-      "architecture": "arm64"
-    },
-    {
-      "osVersionNumber": 18.04,
-      "architecture": "arm64"
-    },
-    {
-      "osVersionNumber": 10,
-      "architecture": "arm64"
-    },
-    {
-      "osVersionNumber": 20.04,
-      "architecture": "arm64"
     },
     {
       "osVersionNumber": 22.04,
