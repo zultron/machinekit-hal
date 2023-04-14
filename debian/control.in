@@ -93,7 +93,9 @@ Depends:
     ${misc:Depends},
     machinekit-hal (= ${binary:Version}),
     python3-pytest,
-    yapps2
+    yapps2,
+    libczmq-dev,
+    libavahi-client-dev
 Section: libs
 Description: Universal framework for machine control based on Hardware Abstraction Layer principle
  This package includes the development environment for Machinekit-HAL.
