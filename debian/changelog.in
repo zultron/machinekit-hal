@@ -1,3 +1,12 @@
+machinekit-hal (0.5.0) unstable; urgency=medium
+
+  * Port to Ubuntu Jammy
+  * Stop CI builds for Buster, Bullseye, Focal
+  * Don't require euid root
+  * Fix setuid binary perms in /usr/libexec/machinekit
+
+ -- John Morris <john@zultron.com>  Tue, 29 Aug 2023 12:41:39 -0500
+
 machinekit-hal (0.4.0) buster; urgency=low
 
   * Drop Debian 8 Jessie as a supported OS
