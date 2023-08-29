@@ -182,7 +182,7 @@ binary-arch: build install
 	dh_strip
 	dh_compress -X.pdf -X.txt -X.hal -X.ini -X.clp -X.var \
 	    -X.tbl -X.xml -Xsample-configs
-	dh_fixperms -X/rtapi_app
+	dh_fixperms -X/rtapi_app -X/cpu_dma_latency_helper -X/pci_read -X/pci_write
 	dh_python3 --ignore-shebangs
 	dh_makeshlibs
 	dh_installdeb
