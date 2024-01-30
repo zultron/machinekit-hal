@@ -101,6 +101,9 @@ AC_PROG_CPP()
 AC_CHECK_TOOL(OBJCOPY, objcopy)
 AC_CHECK_TOOL(LD, ld)
 
+AC_CONFIG_MACRO_DIR(/usr/share/aclocal)
+AC_CONFIG_AUX_DIR(autoconf)
+
 # tools for correct cross-building; this sets $host (the target
 # system) to e.g. x86_64-unknown-linux-gnu
 AC_CANONICAL_HOST  # $host, host_cpu, host_vendor, and host_os
@@ -116,8 +119,6 @@ else
    dnl Avoid PKG_CHECK_MODULES re-checking
    ac_cv_env_PKG_CONFIG_set=set
 fi
-AC_CONFIG_MACRO_DIR(/usr/share/aclocal)
-AC_CONFIG_AUX_DIR(autoconf)
 
 ##############################################################################
 # Section 2                                                                  #
