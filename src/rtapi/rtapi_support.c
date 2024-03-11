@@ -84,7 +84,8 @@ int vs_ringlogfv(const msg_level_t level,
 
     if (rtapi_message_buffer.header != NULL) {
 
-        msg = malloc(sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
+        size_t msg_size = sizeof(rtapi_msgheader_t) + n + 1; // +1:  final \0
+        msg = malloc(msg_size);
         msg->origin = origin;
         msg->pid = pid;
         msg->level = level;
@@ -98,8 +99,7 @@ int vs_ringlogfv(const msg_level_t level,
 	    return -EBUSY;
 	}
 	// use copying writer to shorten criticial section
-	record_write(&rtapi_message_buffer, (void *) msg,
-		     sizeof(rtapi_msgheader_t) + n + 1); // trailing zero
+	record_write(&rtapi_message_buffer, (void *) msg, msg_size);
 	if (rtapi_message_buffer.header->use_wmutex)
 	    rtapi_mutex_give(&rtapi_message_buffer.header->wmutex);
 
