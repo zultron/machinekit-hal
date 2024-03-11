@@ -94,6 +94,7 @@ int vs_ringlogfv(const msg_level_t level,
 	if (rtapi_message_buffer.header->use_wmutex &&
 	    rtapi_mutex_try(&rtapi_message_buffer.header->wmutex)) {
 	    global_data->error_ring_locked++;
+            free(msg);
 	    return -EBUSY;
 	}
 	// use copying writer to shorten criticial section
