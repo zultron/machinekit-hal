@@ -1061,8 +1061,11 @@ def find_modinc():
     global modinc
     if modinc: return modinc
     d = os.path.abspath(os.path.dirname(os.path.dirname(sys.argv[0])))
-    for e in ['src', 'etc/machinekit', '/etc/machinekit', 'share/machinekit']:
-        e = os.path.join(d, e, 'Makefile.modinc')
+    for e in ['src', 'etc/machinekit', '/etc/machinekit', 'share/machinekit', '/usr/share/machinekit']:
+        if not e.startswith('/'):
+            e = os.path.join(d, e, 'Makefile.modinc')
+        else:
+            e = os.path.join(e, 'Makefile.modinc')
         if os.path.exists(e):
             modinc = e
             return e
