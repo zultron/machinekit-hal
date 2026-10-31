@@ -597,6 +597,16 @@ int posix_task_self_hook(void) {
     return -EINVAL;
 }
 
+/* Tasks sleep on CLOCK_MONOTONIC and the PLL reference is a
+ * CLOCK_MONOTONIC time, so rtapi_get_time() must read the same clock.
+ * Without this hook it falls back to CLOCK_MONOTONIC_RAW, which drifts
+ * against CLOCK_MONOTONIC whenever NTP corrects the clock rate. */
+long long int posix_get_time_hook(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+}
+
 long long posix_task_pll_get_reference_hook(void) {
     int task_id = posix_task_self_hook();
     if (task_id < 0) return 0;
@@ -711,7 +721,7 @@ flavor_descriptor_t flavor_rt_prempt_descriptor = {
     .task_wait_hook = posix_wait_hook,
     .task_resume_hook = NULL,
     .task_delay_hook = posix_task_delay_hook,
-    .get_time_hook = NULL,
+    .get_time_hook = posix_get_time_hook,
     .get_clocks_hook = NULL,
     .task_self_hook = posix_task_self_hook,
     .task_pll_get_reference_hook = posix_task_pll_get_reference_hook,
@@ -736,7 +746,7 @@ flavor_descriptor_t flavor_posix_descriptor = {
     .task_wait_hook = posix_wait_hook,
     .task_resume_hook = NULL,
     .task_delay_hook = posix_task_delay_hook,
-    .get_time_hook = NULL,
+    .get_time_hook = posix_get_time_hook,
     .get_clocks_hook = NULL,
     .task_self_hook = posix_task_self_hook,
     .task_pll_get_reference_hook = posix_task_pll_get_reference_hook,
